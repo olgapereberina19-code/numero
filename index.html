@@ -1199,6 +1199,101 @@ document.getElementById('pdfDownloadBtn').onclick = () => { html2pdf().from(docu
 
 checkIfUserPaid();
 console.log("Сайт полностью загружен и работает!");
+    <script>
+// ============================================================
+// АВТООТКРЫТИЕ РАСШИФРОВКИ ПОСЛЕ ОПЛАТЫ (ДОБАВЛЕННЫЙ БЛОК)
+// ============================================================
+
+// Функция для принудительного открытия расшифровки
+function forceOpenMainDecode() {
+    console.log("▶️ Запуск открытия расшифровки");
+    
+    let birth = localStorage.getItem('auto_birth');
+    if (!birth) {
+        birth = document.getElementById('birthMain')?.value;
+        if (birth) {
+            localStorage.setItem('auto_birth', birth);
+        } else {
+            console.log("❌ Нет даты рождения");
+            return;
+        }
+    }
+    
+    if (document.getElementById('birthMain').value !== birth) {
+        document.getElementById('birthMain').value = birth;
+    }
+    
+    // Если данные уже есть в currentMainData
+    if (typeof currentMainData !== 'undefined' && currentMainData && currentMainData.pnum) {
+        console.log("✅ currentMainData уже есть, открываем");
+        if (typeof showFullMainDecode === 'function') {
+            showFullMainDecode();
+        } else if (typeof showFullDecode === 'function') {
+            showFullDecode();
+        } else {
+            console.log("❌ Функция открытия не найдена");
+        }
+        localStorage.removeItem('auto_birth');
+        return;
+    }
+    
+    // Если нет — рассчитываем заново
+    console.log("🔄 Рассчитываем заново");
+    document.getElementById('calcMainBtn').click();
+    
+    let attempts = 0;
+    let checkInterval = setInterval(() => {
+        attempts++;
+        if (typeof currentMainData !== 'undefined' && currentMainData && currentMainData.pnum) {
+            clearInterval(checkInterval);
+            if (typeof showFullMainDecode === 'function') {
+                showFullMainDecode();
+            } else if (typeof showFullDecode === 'function') {
+                showFullDecode();
+            }
+            localStorage.removeItem('auto_birth');
+            console.log("✅ Расшифровка открыта!");
+        } else if (attempts > 30) {
+            clearInterval(checkInterval);
+            console.log("❌ Таймаут");
+            alert('Расшифровка не открылась автоматически. Нажмите "Рассчитать", затем кнопку оплаты (она исчезнет, если оплачено)');
+        }
+    }, 500);
+}
+
+// Проверяем URL при загрузке
+if (window.location.href.includes('paid=1') || window.location.href.includes('success') || window.location.href.includes('payment=success')) {
+    console.log("✅ Обнаружен параметр оплаты в URL");
+    localStorage.setItem('auto_birth', document.getElementById('birthMain')?.value);
+    localStorage.setItem('paid_confirmed', 'true');
+    
+    // Очищаем URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+    
+    // Открываем расшифровку
+    setTimeout(forceOpenMainDecode, 1000);
+}
+
+// Если есть флаг оплаты
+if (localStorage.getItem('paid_confirmed') === 'true') {
+    localStorage.removeItem('paid_confirmed');
+    setTimeout(forceOpenMainDecode, 500);
+}
+
+// Сохраняем дату при нажатии на кнопку оплаты
+const originalPayClick = document.getElementById('mainPayBtn')?.onclick;
+if (document.getElementById('mainPayBtn')) {
+    document.getElementById('mainPayBtn').onclick = () => {
+        const birth = document.getElementById('birthMain')?.value;
+        if (birth) {
+            localStorage.setItem('auto_birth', birth);
+        }
+        if (originalPayClick) originalPayClick();
+    };
+}
+
+console.log("✅ Блок автооткрытия добавлен!");
+</script>
 </script>
 </body>
 </html>
