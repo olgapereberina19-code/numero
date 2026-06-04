@@ -1013,7 +1013,7 @@ const paymentLinks = {
     "Гайд «Все о твоих финансах»": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
     "Гайд «Твое истинное Я»": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
     "Гайд «Путеводитель по мужчинам»": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
-    "Расшифровка нумерологического портрета": "https://payform.ru/7jbFkQ2/",
+    "Расшифровка нумерологического портрета": "	https://payform.ru/q4bGXpI/",
     "Расшифровка прогноза беременности": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
     "Полная расшифровка совместимости": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
     "Расшифровка личного прогноза": "https://payform.ru/ndbFkYs/"
@@ -1200,6 +1200,94 @@ document.getElementById('pdfDownloadBtn').onclick = () => { html2pdf().from(docu
 checkIfUserPaid();
 console.log("Сайт полностью загружен и работает!");
 </script>
-</body>
+// ============================================================
+// АВТОМАТИЧЕСКОЕ ОТКРЫТИЕ РАСШИФРОВКИ ПОСЛЕ ВОЗВРАТА С ОПЛАТЫ
+// ============================================================
+
+// Функция для показа расшифровки (по данным из localStorage)
+function autoOpenDecode() {
+    // Проверяем, есть ли сохранённая дата рождения
+    const savedBirth = localStorage.getItem('auto_birth');
+    if (!savedBirth) return false;
+    
+    // Подставляем дату и нажимаем "Рассчитать"
+    document.getElementById('birthMain').value = savedBirth;
+    document.getElementById('calcMainBtn').click();
+    
+    // Ждём расчёта и открываем расшифровку
+    setTimeout(() => {
+        if (currentMainData) {
+            showFullMainDecode();
+            localStorage.removeItem('auto_birth');
+            return true;
+        }
+    }, 800);
+    return true;
+}
+
+// ПРОВЕРЯЕМ ПАРАМЕТРЫ В URL ПРИ ЗАГРУЗКЕ
+const urlParams = new URLSearchParams(window.location.search);
+const isPaid = urlParams.has('paid') || urlParams.has('success') || urlParams.has('order');
+
+if (isPaid) {
+    // Берём дату рождения из localStorage (сохраняем перед оплатой)
+    const birth = localStorage.getItem('auto_birth');
+    if (birth) {
+        // Очищаем URL от параметров, чтобы при обновлении не открывалось снова
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Открываем расшифровку
+        autoOpenDecode();
+        
+        // Показываем сообщение
+        setTimeout(() => {
+            alert('✅ Оплата подтверждена! Расшифровка открыта.');
+        }, 1000);
+    } else {
+        // Если нет сохранённой даты, сохраняем флаг оплаты
+        localStorage.setItem('just_paid', 'true');
+    }
+}
+
+// СОХРАНЯЕМ ДАТУ ПЕРЕД ОПЛАТОЙ
+// Меняем поведение кнопки "Оплатить"
+const originalPayBtn = document.getElementById('mainPayBtn').onclick;
+document.getElementById('mainPayBtn').onclick = () => {
+    const birth = document.getElementById('birthMain').value;
+    if (birth) {
+        localStorage.setItem('auto_birth', birth);
+    }
+    if (originalPayBtn) originalPayBtn();
+};
+
+// Если пользователь уже оплатил ранее (флаг в localStorage)
+if (localStorage.getItem('just_paid') === 'true') {
+    localStorage.removeItem('just_paid');
+    autoOpenDecode();
+}
+
+// Функция для открытия полной расшифровки (добавьте, если нет)
+function showFullMainDecode() {
+    mainPaid = true;
+    const chFull = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"].map((n,i) => 
+        `<div class="result-block"><strong>${n}: ${currentMainData.ch[i]}%</strong><div class="full-text">${chakraFull[n][getChakraStatus(currentMainData.ch[i])]}</div></div>`
+    ).join('');
+    
+    const fullHtml = `
+        <div class="result-block"><strong>🧠 Психотип:</strong> ${currentMainData.pnum}<div class="full-text">${psychotypesFull[currentMainData.pnum]}</div></div>
+        ${chFull}
+        <div class="result-block"><strong>🏛 Задача рода:</strong> ${currentMainData.rodDisplay}<div class="full-text">${rodFull[currentMainData.rodFirst]}</div></div>
+        <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${currentMainData.pastDisplay}<div class="full-text">${pastFull[currentMainData.pastFirst]}</div></div>
+        <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${currentMainData.presDisplay}<div class="full-text">${presentFull[currentMainData.presFirst]}</div></div>
+        <div class="result-block"><strong>👪 Задача родителей:</strong> ${currentMainData.parentsDisplay}<div class="full-text">${parentsFull[currentMainData.parentsFirst]}</div></div>
+        <div class="result-block"><strong>📆 Периоды жизни:</strong> ${currentMainData.periods.map((p,i)=>`<div>${p} — ${periodNames[p]} (${currentMainData.agesList[i]})</div><div class="full-text">${periodsFull[p]}</div>`).join('')}</div>`;
+    
+    document.getElementById('mainResults').innerHTML = fullHtml;
+    document.getElementById('pdfButtons').style.display = 'block';
+    const payBtn = document.getElementById('mainPayBtn');
+    if (payBtn) payBtn.style.display = 'none';
+}
+
+console.log('Автоматическое открытие расшифровки настроено!');</body>
 </html>
 
