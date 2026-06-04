@@ -1031,6 +1031,18 @@ function showPaymentModal(name, price, type, extra = null) {
         footnote = 'Прогноз на год, месяцы и дни.';
     }
     document.getElementById('modalExtraFields').innerHTML = extraHtml;
+        // ДОБАВЛЯЕМ СОХРАНЕНИЕ ДАТЫ РОЖДЕНИЯ ПЕРЕД ОПЛАТОЙ
+    if (type === 'main') {
+        const mainBirthInput = document.getElementById('birthMain');
+        if (mainBirthInput && mainBirthInput.value) {
+            // Сохраняем дату в скрытое поле внутри модалки
+            const hiddenBirth = document.createElement('input');
+            hiddenBirth.type = 'hidden';
+            hiddenBirth.id = 'modalBirthHidden';
+            hiddenBirth.value = mainBirthInput.value;
+            document.getElementById('modalExtraFields').appendChild(hiddenBirth);
+        }
+    }
     document.getElementById('modalFootnote').innerHTML = footnote;
     agreeDocsCheck.checked = false;
     document.getElementById('agreeMail').checked = false;
@@ -1038,8 +1050,65 @@ function showPaymentModal(name, price, type, extra = null) {
     modalDiv.style.display = 'flex';
     agreeDocsCheck.onchange = () => { modalPayBtnElem.disabled = !agreeDocsCheck.checked; };
 }
-
-document.getElementById('modalCancel').onclick = () => { modalDiv.style.display = 'none'; };
+document.getElementById('modalPayBtn').onclick = () => {
+    // Проверяем согласие с документами
+    if (!agreeDocsCheck.checked) {
+        alert('Пожалуйста, примите условия оферты');
+        return;
+    }
+    
+    if(currentPayment.type === 'main'){
+        // Для основного калькулятора — сохраняем дату в localStorage
+        let birth = document.getElementById('birthMain').value;
+        if (!birth) {
+            birth = document.getElementById('modalBirthHidden')?.value;
+        }
+        if (!birth) {
+            alert("Пожалуйста, введите дату рождения в калькуляторе");
+            return;
+        }
+        localStorage.setItem('mainBirth', birth);
+        localStorage.setItem('mainPaid', 'pending');
+    } else if(currentPayment.type === 'preg'){
+        let birth = document.getElementById('birthPreg')?.value;
+        let year = document.getElementById('pregCurrentYear')?.value || new Date().getFullYear();
+        if(!birth){ alert("Введите дату рождения"); return; }
+        localStorage.setItem('pregBirth', birth);
+        localStorage.setItem('pregYear', year);
+        localStorage.setItem('pregPaid', 'pending');
+    } else if(currentPayment.type === 'compat'){
+        let male = document.getElementById('birthMale')?.value;
+        let female = document.getElementById('birthFemale')?.value;
+        if(!male || !female){ alert("Введите даты"); return; }
+        localStorage.setItem('compatMale', male);
+        localStorage.setItem('compatFemale', female);
+        localStorage.setItem('compatPaid', 'pending');
+    } else if(currentPayment.type === 'forecast'){
+        let birth = document.getElementById('birthForecast')?.value;
+        let year = document.getElementById('forecastCurrentYear')?.value || new Date().getFullYear();
+        if(!birth){ alert("Введите дату рождения"); return; }
+        localStorage.setItem('forecastBirth', birth);
+        localStorage.setItem('forecastYear', year);
+        localStorage.setItem('forecastPaid', 'pending');
+    } else if(currentPayment.type === 'guide'){
+        // Для гайдов просто сохраняем название
+        localStorage.setItem('guideName', currentPayment.name);
+        localStorage.setItem('guidePaid', 'pending');
+    }
+    
+    modalDiv.style.display = 'none';
+    
+    let payUrl = paymentLinks[currentPayment.name];
+    if(payUrl && payUrl !== "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ"){
+        // Добавляем параметр success_url с текущим адресом
+        const currentUrl = window.location.href.split('?')[0];
+        const separator = payUrl.includes('?') ? '&' : '?';
+        payUrl = payUrl + separator + 'success_url=' + encodeURIComponent(currentUrl + '?payment=success');
+        window.location.href = payUrl;
+    } else {
+        alert(`Ссылка на оплату для "${currentPayment.name}" не настроена.`);
+    }
+};
 
 // ⬇⬇⬇ ЗДЕСЬ ВСТАВЬТЕ ВАШИ ССЫЛКИ НА ОПЛАТУ ⬇⬇⬇
 const paymentLinks = {
@@ -1347,6 +1416,116 @@ console.log("Сайт полностью загружен и работает!")
 </body>
 </html>
 console.log("Сайт полностью загружен и работает!");
+// ============================================================
+// АВТОМАТИЧЕСКАЯ АКТИВАЦИЯ ПОСЛЕ ОПЛАТЫ (ДОБАВЛЕНО)
+// ============================================================
+
+// Функция показа полной расшифровки для основного калькулятора
+function showFullMainDecode() {
+    if (!currentMainData) {
+        console.log('Нет данных для расшифровки');
+        return;
+    }
+    
+    const chFull = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"].map((n,i) => 
+        `<div class="result-block"><strong>${n}: ${currentMainData.ch[i]}%</strong><div class="full-text">${chakraFull[n][getChakraStatus(currentMainData.ch[i])]}</div></div>`
+    ).join('');
+    
+    const fullHtml = `
+        <div class="result-block"><strong>🧠 Психотип:</strong> ${currentMainData.pnum}<div class="full-text">${psychotypesFull[currentMainData.pnum]}</div></div>
+        ${chFull}
+        <div class="result-block"><strong>🏛 Задача рода:</strong> ${currentMainData.rodFirst}<div class="full-text">${rodFull[currentMainData.rodFirst]}</div></div>
+        <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${currentMainData.pastFirst}<div class="full-text">${pastFull[currentMainData.pastFirst]}</div></div>
+        <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${currentMainData.presFirst}<div class="full-text">${presentFull[currentMainData.presFirst]}</div></div>
+        <div class="result-block"><strong>👪 Задача родителей:</strong> ${currentMainData.parentsFirst}<div class="full-text">${parentsFull[currentMainData.parentsFirst]}</div></div>
+        <div class="result-block"><strong>📆 Периоды жизни:</strong> ${currentMainData.periods.map((p,i)=>`<div>${p} — ${periodNames[p]} (${currentMainData.agesList[i]})</div><div class="full-text">${periodsFull[p]}</div>`).join('')}</div>
+        <div style="text-align:center; margin-top:20px;">
+            <button onclick="html2pdf().from(document.getElementById('mainResults')).save()" class="pay-btn">📥 Скачать PDF</button>
+        </div>`;
+    
+    const resultsDiv = document.getElementById('mainResults');
+    if (resultsDiv) {
+        resultsDiv.innerHTML = fullHtml;
+    }
+    
+    const pdfButtons = document.getElementById('pdfButtons');
+    if (pdfButtons) pdfButtons.style.display = 'block';
+    
+    // Переключаемся на вкладку калькулятора
+    const tabBtn = document.querySelector('[data-tab="tab1"]');
+    if (tabBtn) tabBtn.click();
+    
+    // Прокручиваем к результатам
+    const mainResults = document.getElementById('mainResults');
+    if (mainResults) mainResults.scrollIntoView({ behavior: 'smooth' });
+    
+    alert('🔓 Расшифровка открыта! Вы можете сохранить её в PDF.');
+}
+
+// Функция проверки оплаты
+function checkPaymentAndActivate() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentSuccess = urlParams.get('payment') === 'success';
+    const paidParam = urlParams.get('paid') === '1';
+    
+    // Если есть параметр успешной оплаты
+    if (paymentSuccess || paidParam) {
+        console.log('✅ Оплата обнаружена! Активируем расшифровку...');
+        
+        // Проверяем сохраненную дату
+        let savedBirth = localStorage.getItem('mainBirth');
+        
+        if (savedBirth) {
+            // Вставляем дату и запускаем расчет
+            const birthInput = document.getElementById('birthMain');
+            if (birthInput) {
+                birthInput.value = savedBirth;
+            }
+            
+            const calcBtn = document.getElementById('calcMainBtn');
+            if (calcBtn) calcBtn.click();
+            
+            // Активируем полную версию через 1 секунду
+            setTimeout(function() {
+                if (typeof mainPaid !== 'undefined') {
+                    mainPaid = true;
+                }
+                if (currentMainData) {
+                    showFullMainDecode();
+                }
+                localStorage.removeItem('mainBirth');
+            }, 1000);
+        } else {
+            // Если даты нет в localStorage — запрашиваем
+            setTimeout(function() {
+                const birth = prompt('🎉 Спасибо за оплату!\nВведите вашу дату рождения (в формате ГГГГ-ММ-ДД):');
+                if (birth) {
+                    const birthInput = document.getElementById('birthMain');
+                    if (birthInput) birthInput.value = birth;
+                    
+                    const calcBtn = document.getElementById('calcMainBtn');
+                    if (calcBtn) calcBtn.click();
+                    
+                    setTimeout(function() {
+                        if (typeof mainPaid !== 'undefined') mainPaid = true;
+                        if (currentMainData) showFullMainDecode();
+                    }, 1000);
+                }
+            }, 500);
+        }
+        
+        // Убираем параметры из URL
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, newUrl);
+    }
+}
+
+// Запускаем проверку при загрузке страницы
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkPaymentAndActivate);
+} else {
+    checkPaymentAndActivate();
+}
 </script>
 </body>
 </html>
