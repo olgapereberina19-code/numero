@@ -1261,6 +1261,128 @@ document.getElementById('pdfDownloadBtn').onclick = () => { html2pdf().from(docu
 
 console.log("Сайт полностью загружен и работает!");
 </script>
+// ============================================================
+// ДИАГНОСТИКА И АВТОМАТИЧЕСКОЕ ОТКРЫТИЕ (УСИЛЕННАЯ ВЕРСИЯ)
+// ============================================================
+
+// Функция для показа расшифровки
+function forceOpenDecode() {
+    console.log("▶️ Запуск forceOpenDecode()");
+    
+    // Проверяем, есть ли дата рождения
+    let birth = localStorage.getItem('auto_birth');
+    if (!birth) {
+        birth = document.getElementById('birthMain')?.value;
+        if (birth) {
+            localStorage.setItem('auto_birth', birth);
+        } else {
+            console.log("❌ Нет даты рождения");
+            return;
+        }
+    }
+    
+    console.log("📅 Дата рождения:", birth);
+    
+    // Подставляем дату
+    if (document.getElementById('birthMain').value !== birth) {
+        document.getElementById('birthMain').value = birth;
+    }
+    
+    // Нажимаем кнопку "Рассчитать"
+    document.getElementById('calcMainBtn').click();
+    
+    // Ждём расчёта и открываем расшифровку
+    let attempts = 0;
+    let checkInterval = setInterval(() => {
+        attempts++;
+        console.log("⏳ Ожидание расчёта, попытка", attempts);
+        
+        if (currentMainData) {
+            clearInterval(checkInterval);
+            console.log("✅ currentMainData получен!");
+            showFullMainDecode();
+            localStorage.removeItem('auto_birth');
+            alert('✅ Оплата подтверждена! Расшифровка открыта.');
+        } else if (attempts > 20) {
+            clearInterval(checkInterval);
+            console.log("❌ Таймаут: currentMainData не получен");
+            alert('⚠️ Расшифровка не открылась автоматически. Нажмите кнопку "Рассчитать" и затем "🔓 Я оплатил(а) — получить расшифровку" в правом нижнем углу.');
+        }
+    }, 500);
+}
+
+// Проверяем параметры URL
+const currentUrl = window.location.href;
+console.log("🔍 Текущий URL:", currentUrl);
+
+const hasPaidParam = currentUrl.includes('paid=1') || currentUrl.includes('?paid=1') || currentUrl.includes('&paid=1');
+
+if (hasPaidParam) {
+    console.log("✅ Параметр paid=1 найден!");
+    
+    // Очищаем URL от параметров
+    window.history.replaceState({}, document.title, window.location.pathname);
+    
+    // Сохраняем флаг оплаты
+    localStorage.setItem('just_paid', 'true');
+    
+    // Запускаем открытие расшифровки
+    setTimeout(() => {
+        forceOpenDecode();
+    }, 1000);
+} else {
+    console.log("❌ Параметр paid=1 НЕ найден в URL");
+}
+
+// Если есть флаг just_paid
+if (localStorage.getItem('just_paid') === 'true') {
+    console.log("✅ Найден флаг just_paid");
+    localStorage.removeItem('just_paid');
+    setTimeout(() => {
+        forceOpenDecode();
+    }, 500);
+}
+
+// Создаём кнопку на случай, если автооткрытие не сработало
+function createManualButton() {
+    if (document.getElementById('manualUnlockBtnFixed')) return;
+    
+    const btn = document.createElement('button');
+    btn.id = 'manualUnlockBtnFixed';
+    btn.innerHTML = '🔓 Я оплатил(а) — получить расшифровку';
+    btn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        background: #4CAF50;
+        border: none;
+        padding: 14px 24px;
+        border-radius: 50px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        font-size: 14px;
+    `;
+    
+    btn.onclick = () => {
+        const birth = document.getElementById('birthMain')?.value;
+        if (birth) {
+            localStorage.setItem('auto_birth', birth);
+            forceOpenDecode();
+        } else if (localStorage.getItem('auto_birth')) {
+            forceOpenDecode();
+        } else {
+            alert('Сначала введите дату рождения и нажмите "Рассчитать"');
+        }
+    };
+    
+    document.body.appendChild(btn);
+}
+
+// Показываем кнопку через 3 секунды (на случай, если автооткрытие не сработало)
+setTimeout(createManualButton, 3000);
 </body>
 </html>
     
