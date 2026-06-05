@@ -101,6 +101,7 @@
         .daily-card.active .code{color:#D4C5B8;}
         .daily-desc-full{margin-top:16px;padding:16px;background:#FAF8F5;border-radius:16px;border:1px solid #EFE9E2;display:none;}
         .daily-desc-full.show{display:block;}
+        .payment-badge{background:#4CAF50;color:white;padding:8px 16px;border-radius:40px;font-size:0.8rem;display:inline-block;margin-bottom:16px;}
         @media(max-width:680px){
             .two-columns{flex-direction:column;}
             .container{padding:20px 16px;}
@@ -155,6 +156,69 @@
 <div id="paymentModal" class="modal"><div class="modal-content"><h3 id="modalTitle">💳 Оформление заказа</h3><div id="modalProductInfo" class="product-line"></div><div id="modalExtraFields"></div><div class="modal-checkbox"><input type="checkbox" id="agreeDocs"><label>Я ознакомлен/-на с условиями публичной оферты, принимаю условия Политики конфиденциальности и даю согласие на обработку персональных данных. *</label></div><div class="modal-checkbox"><input type="checkbox" id="agreeMail"><label>Я согласен/-на получать информационно-рекламные письма. (необязательно)</label></div><div class="modal-buttons"><button class="btn-cancel" id="modalCancel">Отмена</button><button class="btn-pay" id="modalPayBtn" disabled>Оплатить</button></div><div id="modalFootnote" class="modal-footnote"></div></div></div>
 
 <script>
+// ============================================================================
+// НОВЫЙ БЛОК: АВТОМАТИЧЕСКОЕ ОТКРЫТИЕ ПОСЛЕ ОПЛАТЫ ЧЕРЕЗ PRODAMUS
+// ============================================================================
+(function autoOpenAfterPayment() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paid = urlParams.get('paid');
+    
+    if (paid === '1') {
+        // Показываем уведомление
+        setTimeout(() => {
+            alert('✅ Оплата прошла успешно! Теперь ваша расшифровка открыта полностью.');
+        }, 500);
+        
+        // Сохраняем флаги оплаты для всех типов калькуляторов
+        // Пользователь сам выберет, какую расшифровку хочет открыть
+        localStorage.setItem('mainPaid', 'true');
+        localStorage.setItem('pregPaid', 'true');
+        localStorage.setItem('compatPaid', 'true');
+        localStorage.setItem('forecastPaid', 'true');
+        
+        // Пытаемся восстановить сохранённые даты
+        const savedMainBirth = localStorage.getItem('mainBirth');
+        const savedPregBirth = localStorage.getItem('pregBirth');
+        const savedForecastBirth = localStorage.getItem('forecastBirth');
+        const savedCompatMale = localStorage.getItem('compatMale');
+        const savedCompatFemale = localStorage.getItem('compatFemale');
+        
+        // Если есть сохранённые даты для портрета — автоматически показываем расшифровку
+        if (savedMainBirth) {
+            document.getElementById('birthMain').value = savedMainBirth;
+            document.getElementById('calcMainBtn').click();
+            setTimeout(() => {
+                if (document.getElementById('mainResults')) {
+                    // Прокручиваем к результатам
+                    document.getElementById('mainResults').scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 300);
+        }
+        
+        // Если есть сохранённые даты для беременности
+        if (savedPregBirth) {
+            document.getElementById('birthPreg').value = savedPregBirth;
+            document.getElementById('calcPregBtn').click();
+        }
+        
+        // Если есть сохранённые даты для прогноза
+        if (savedForecastBirth) {
+            document.getElementById('birthForecast').value = savedForecastBirth;
+            document.getElementById('calcForecastBtn').click();
+        }
+        
+        // Если есть сохранённые даты для совместимости
+        if (savedCompatMale && savedCompatFemale) {
+            document.getElementById('birthMale').value = savedCompatMale;
+            document.getElementById('birthFemale').value = savedCompatFemale;
+            document.getElementById('calcCompatBtn').click();
+        }
+        
+        // Очищаем URL от параметра paid=1 (чтобы при обновлении страницы не было повторного уведомления)
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+})();
+
 // ============================================================================
 // 1. ПСИХОТИПЫ (1–9) - КАЖДЫЙ С НОВОЙ СТРОКИ
 // ============================================================================
@@ -270,6 +334,7 @@ const pairTrialShort = {
     8: "Кризис"
 };
 
+// Краткие описания годов для бесплатной версии личного прогноза
 const forecastYearShort = {
     "1/1": "твёрдая опора / страх самостоятельности",
     "1/2": "поддержка близких / эмоциональные качели",
@@ -577,7 +642,7 @@ const forecastDayDecodes = {
 };
 
 // ============================================================================
-// 18. МАРКЕРЫ (как в оригинале)
+// 18. МАРКЕРЫ ГОДА
 // ============================================================================
 const yearMarkers = {
     1900:[7,17,17],1901:[10,16,15],1902:[13,15,13],1903:[16,14,11],1904:[18,12,8],1905:[21,11,6],1906:[1,10,4],1907:[4,9,2],1908:[6,7,32],1909:[9,6,30],
@@ -604,6 +669,9 @@ const yearMarkers = {
 
 function getYearMarkers(y){ return yearMarkers[y] || [5,5,5]; }
 
+// ============================================================================
+// 19. МАРКЕРЫ МЕСЯЦА
+// ============================================================================
 const monthMarkers = {
     1:{normal:[12,26,4],leap:[13,27,5]},2:{normal:[7,26,9],leap:[7,26,9]},3:{normal:[22,23,11],leap:[22,23,11]},
     4:{normal:[15,21,14],leap:[15,21,14]},5:{normal:[7,18,16],leap:[7,18,16]},6:{normal:[0,16,19],leap:[0,16,19]},
@@ -619,10 +687,16 @@ const daysInMonth = {1:31,2:28,3:31,4:30,5:31,6:30,7:31,8:31,9:30,10:31,11:30,12
 
 function getDayMarker(d,m,y){ let total=daysInMonth[m]; if(m===2 && isLeapYear(y)) total=29; return total-d; }
 
+// ============================================================================
+// 20. БИОРИТМЫ
+// ============================================================================
 const bio23 = {1:[33,55],2:[55,72],3:[15,65],4:[50,72],5:[30,41],6:[75,21],7:[45,72],8:[60,22],9:[35,28],10:[35,49],11:[95,22],12:[30,99],13:[40,61],14:[20,55],15:[40,28],16:[90,21],17:[50,83],18:[10,45],19:[99,55],20:[30,52],21:[20,79],22:[80,63],23:[25,51]};
 const bio28 = {1:[69,95],2:[75,27],3:[31,45],4:[62,77],5:[50,59],6:[44,68],7:[12,45],8:[6,23],9:[81,54],10:[25,77],11:[18,50],12:[44,59],13:[25,68],14:[50,77],15:[50,99],16:[50,36],17:[50,41],18:[31,14],19:[99,54],20:[44,32],21:[62,41],22:[25,18],23:[69,59],24:[56,41],25:[44,68],26:[37,41],27:[56,73],28:[44,73]};
 const bio33 = {1:[64,35],2:[21,65],3:[21,65],4:[93,82],5:[43,41],6:[0,99],7:[57,88],8:[7,41],9:[29,35],10:[86,35],11:[29,82],12:[86,41],13:[14,71],14:[50,59],15:[78,65],16:[93,24],17:[84,71],18:[29,41],19:[26,71],20:[99,82],21:[7,76],22:[14,35],23:[50,65],24:[26,18],25:[29,88],26:[93,59],27:[57,82],28:[29,29],29:[29,88],30:[71,47],31:[7,35],32:[64,59],33:[29,82]};
 
+// ============================================================================
+// 21. ФУНКЦИЯ РАСЧЁТА ЧАКР
+// ============================================================================
 function calculateChakras(dt){
     let y=dt.getFullYear(), m=dt.getMonth()+1, d=dt.getDate();
     let ym=getYearMarkers(y), mm=getMonthMarker(m,y), dm=getDayMarker(d,m,y);
@@ -639,6 +713,9 @@ function getChakraStatus(val){ return val<=30 ? "слабая" : (val>=60 ? "с�
 const periodNames = {0:"Везение или потерянность",1:"Смелость или страх",2:"Радость или одиночество",3:"Богатство или бедность",4:"Любовь или боль",5:"Известность или забвение",6:"Вдохновение или депрессия",7:"Интуиция или безрассудность",8:"Масштаб или крах",9:"Раскрытие потенциала или фатальные перемены"};
 const agesList = ["0-12 лет","12-24 лет","24-36 лет","36-48 лет","48-60 лет","60+ лет"];
 
+// ============================================================================
+// 22. 48 МЕТАФОРИЧЕСКИХ КАРТ
+// ============================================================================
 const CARDS = [
     {name:"Будьте маяком ясности для себя и других в мире информации",img:"https://raw.githubusercontent.com/olgapereberina19-code/metafora/main/будьте%20маяком%20ясности%20для%20себя%20и%20других%20в%20мире%20информации..png"},
     {name:"В тишине рождается высшее знание. Просто будьте",img:"https://raw.githubusercontent.com/olgapereberina19-code/metafora/main/в%20тишине%20рождается%20высшее%20знание.%20Просто%20будьте.png"},
@@ -690,6 +767,9 @@ const CARDS = [
     {name:"Создайте своё пространство безопасности и уюта",img:"https://raw.githubusercontent.com/olgapereberina19-code/metafora/main/создайте%20своё%20пространство%20безопасности%20и%20уюта..png"}
 ];
 
+// ============================================================================
+// 23. ОСНОВНОЙ КАЛЬКУЛЯТОР (С ФОРМАТОМ X/Y)
+// ============================================================================
 let mainPaid = false;
 let currentMainData = null;
 
@@ -737,28 +817,44 @@ document.getElementById('calcMainBtn').onclick = () => {
     currentMainData = { ch, pnum, rodFirst, pastFirst, presFirst, parentsFirst, periods, agesList, dt, rodDisplay, pastDisplay, presDisplay, parentsDisplay };
     
     let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
-    let chakraRows = chakraNames.map((n,i) => `<tr><td>${n}</td><td>${ch[i]}%</td><td>${getChakraStatus(ch[i])}</td></tr>`).join('');
+    let chakraRows = chakraNames.map((n,i) => `<tr><td>${n}</td><td>${ch[i]}%</td><td class="code-pair">${getChakraStatus(ch[i])}</td></tr>`).join('');
     let chakraTable = `<table class="chakra-table"><thead><tr><th>Название чакры</th><th>Емкость чакры</th><th>Значение</th></tr></thead><tbody>${chakraRows}</tbody></table>`;
     
-    document.getElementById('mainResults').innerHTML = `
-        <div class="result-block"><strong>🧠 Психотип:</strong> ${pnum} — ${["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][pnum]}</div>
-        <div class="result-block"><strong>🌀 Чакры:</strong> ${chakraTable}</div>
-        <div class="result-block"><strong>🏛 Задача рода:</strong> ${rodDisplay} — ${rodShort[rodFirst]}</div>
-        <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${pastDisplay} — ${pastShort[pastFirst]}</div>
-        <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${presDisplay} — ${presentShort[presFirst]}</div>
-        <div class="result-block"><strong>👪 Задача родителей:</strong> ${parentsDisplay} — ${parentsShort[parentsFirst]}</div>
-        <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periodsHtml}</div>`;
-    document.getElementById('pdfButtons').style.display = 'none';
-    mainPaid = false;
+    let psychotypeName = ["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][pnum];
+    
+    // Если оплачено — показываем полные тексты
+    if (mainPaid) {
+        let chFullHtml = chakraNames.map((n,i) => `<div class="result-block"><strong>${n}: ${ch[i]}%</strong><div class="full-text">${chakraFull[n][getChakraStatus(ch[i])]}</div></div>`).join('');
+        let fullHtml = `<div class="result-block"><strong>🧠 Психотип:</strong> ${pnum} — ${psychotypeName}<div class="full-text">${psychotypesFull[pnum]}</div></div>
+                        ${chFullHtml}
+                        <div class="result-block"><strong>🏛 Задача рода:</strong> ${rodDisplay}<div class="full-text">${rodFull[rodFirst]}</div></div>
+                        <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${pastDisplay}<div class="full-text">${pastFull[pastFirst]}</div></div>
+                        <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${presDisplay}<div class="full-text">${presentFull[presFirst]}</div></div>
+                        <div class="result-block"><strong>👪 Задача родителей:</strong> ${parentsDisplay}<div class="full-text">${parentsFull[parentsFirst]}</div></div>
+                        <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periods.map((p,i)=>`<div>${p} — ${periodNames[p]} (${agesList[i]})</div><div class="full-text">${periodsFull[p]}</div>`).join('')}</div>`;
+        document.getElementById('mainResults').innerHTML = fullHtml;
+        document.getElementById('pdfButtons').style.display = 'block';
+    } else {
+        document.getElementById('mainResults').innerHTML = `
+            <div class="result-block"><strong>🧠 Психотип:</strong> ${pnum} — ${psychotypeName}</div>
+            <div class="result-block"><strong>🌀 Чакры:</strong> ${chakraTable}</div>
+            <div class="result-block"><strong>🏛 Задача рода:</strong> ${rodDisplay} — ${rodShort[rodFirst]}</div>
+            <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${pastDisplay} — ${pastShort[pastFirst]}</div>
+            <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${presDisplay} — ${presentShort[presFirst]}</div>
+            <div class="result-block"><strong>👪 Задача родителей:</strong> ${parentsDisplay} — ${parentsShort[parentsFirst]}</div>
+            <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periodsHtml}</div>`;
+        document.getElementById('pdfButtons').style.display = 'none';
+    }
 };
 
 document.getElementById('mainPayBtn').onclick = () => {
     if (mainPaid) return;
-    let birth = document.getElementById('birthMain').value;
-    if (!birth) { alert("Сначала рассчитайте портрет"); return; }
-    showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: birth });
+    showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
 };
 
+// ============================================================================
+// 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
+// ============================================================================
 let pregPaid = false, pregYearly = [], pregTyp = 0, pregBase = "", pregCurrentYear = 2025;
 
 function getMonthlyCodes(baseNum, year, typ) {
@@ -772,12 +868,13 @@ function renderPregnancy(year) {
     pregCurrentYear = year;
     let monthly = getMonthlyCodes(pregBase, year, pregTyp);
     let yearDisplay = pregYearly.find(c=>c.year===year)?.display || "";
-    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td>${m.month}</td><td>${m.display}</td><td>${pregPaid ? (pregnancyMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
+    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${pregPaid ? (pregnancyMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
     let yearsHtml = `<div class="years-grid">${pregYearly.map(c => `<div class="year-card ${c.year === year ? 'active' : ''}" data-year="${c.year}"><div class="year">${c.year}</div><div class="code">${c.display}</div></div>`).join('')}</div>`;
     let yearFullDesc = `<div class="full-text" style="margin-top:16px;">${pregPaid ? (pregnancyYearDecodes[yearDisplay] || "🔓") : "🔒 Полная расшифровка года откроется после оплаты"}</div>`;
     document.getElementById('pregResults').innerHTML = `<div class="results-area"><h3>📅 Код года</h3>${yearsHtml}${yearFullDesc}</div><div class="results-area"><h3>📆 Код месяцев за ${year} год</h3>${monthsHtml}</div>`;
     document.getElementById('payWallPreg').style.display = 'block';
     document.querySelectorAll('#pregResults .year-card').forEach(c => c.addEventListener('click', () => renderPregnancy(parseInt(c.dataset.year))));
+    document.getElementById('pregResults').style.display = 'block';
 }
 
 document.getElementById('calcPregBtn').onclick = () => {
@@ -795,9 +892,8 @@ document.getElementById('calcPregBtn').onclick = () => {
         while(second>9) second = Math.floor(second/10)+(second%10);
         pregYearly.push({ year: start+i, display: first+'/'+second });
     }
-    document.getElementById('pregResults').style.display = 'block';
     renderPregnancy(start);
-    pregPaid = false;
+    pregPaid = pregPaid; // сохраняем флаг
 };
 
 document.getElementById('pregPayBtn').onclick = () => {
@@ -806,6 +902,9 @@ document.getElementById('pregPayBtn').onclick = () => {
     showPaymentModal("Расшифровка прогноза беременности", 390, "preg", { birth, year: pregCurrentYear });
 };
 
+// ============================================================================
+// 25. КАЛЬКУЛЯТОР СОВМЕСТИМОСТИ
+// ============================================================================
 let compatPaid = false;
 
 function getCompatibilityStatus(chakraName, maleVal, femaleVal) {
@@ -844,7 +943,7 @@ function renderCompat() {
             case "critical": statusText = "Критическая нехватка"; break;
         }
         let fullText = compatPaid ? (chakraCompatibilityTexts[chakraNames[i]][status.type] || "") : "";
-        rows += `<tr><td>${chakraNames[i]}</td><td>${vm}%</td><td>${vf}%</td><td>${statusText}${fullText ? `<br><small>${fullText}</small>` : ""}</td></tr>`;
+        rows += `<tr><td class="code-pair">${chakraNames[i]}</td><td class="code-pair">${vm}%</td><td class="code-pair">${vf}%</td><td class="code-pair">${statusText}${fullText ? `<br><small>${fullText}</small>` : ""}</td></tr>`;
     }
     let pairKey = mNum+"+"+fNum;
     let compatTypesText = compatPaid ? (compatibilityTypesFull[pairKey] || "🔓") : "🔒 Оплатите";
@@ -853,7 +952,7 @@ function renderCompat() {
         <div class="result-block"><strong>🎯 Задача пары:</strong> ${sum} — ${pairTaskShort[sum]}</div>
         <div class="result-block"><strong>⚔️ Испытание:</strong> ${diff} — ${pairTrialShort[diff]}</div>
         <div class="result-block"><strong>🌀 Совместимость по чакрам</strong><table class="compat-table"><thead><tr><th>Чакра</th><th>Мужчина</th><th>Женщина</th><th>Совместимость</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-    if(compatPaid) html += `<div class="full-text">⭐ Задача пары: ${pairTaskFull[sum]}<br>⭐ Испытание: ${pairTrialFull[diff]}</div>`;
+    if(compatPaid) html += `<div class="full-text"><strong>⭐ Задача пары:</strong> ${pairTaskFull[sum]}<br><strong>⭐ Испытание:</strong> ${pairTrialFull[diff]}</div>`;
     document.getElementById('compatResults').innerHTML = html;
     document.getElementById('compatPdfBtn').style.display = compatPaid ? 'block' : 'none';
 }
@@ -866,6 +965,9 @@ document.getElementById('compatPayBtn').onclick = () => {
 };
 document.getElementById('downloadCompatPdf').onclick = () => { html2pdf().from(document.getElementById('compatResults')).save(); };
 
+// ============================================================================
+// 26. ЛИЧНЫЙ ПРОГНОЗ
+// ============================================================================
 let forecastPaid = false, forecastYearly = [], forecastBase = "", forecastTyp = 0, forecastStartYear = 0, forecastCurrentYear = 0;
 
 function getDailyCodes(baseNum, year, month, typ) {
@@ -881,6 +983,7 @@ function getDailyCodes(baseNum, year, month, typ) {
     return codes;
 }
 
+let currentDailyCodes = [];
 let currentMonth = 1;
 
 function showDailyDesc(day, code) {
@@ -897,6 +1000,7 @@ function renderForecast(year, month=1) {
     currentMonth = month;
     let monthly = getMonthlyCodes(forecastBase, year, forecastTyp);
     let daily = getDailyCodes(forecastBase, year, month, forecastTyp);
+    currentDailyCodes = daily;
     
     let daysInMonthCount = new Date(year, month, 0).getDate();
     let dailyGrid = `<div class="daily-codes-grid">`;
@@ -910,7 +1014,7 @@ function renderForecast(year, month=1) {
     let yearFullDesc = `<div class="full-text" style="margin-top:16px;">${forecastPaid ? (forecastYearDecodes[forecastYearly.find(c=>c.year===year)?.display] || "🔓") : "🔒 Полная расшифровка года откроется после оплаты"}</div>`;
     let monthSelect = `<select id="forecastMonthSelect" style="margin:16px 0; padding:8px;"><option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option><option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option><option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option><option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option></select>`;
     
-    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td>${m.month}</td><td>${m.display}</td><td>${forecastPaid ? (forecastMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
+    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${forecastPaid ? (forecastMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
     
     document.getElementById('forecastResults').innerHTML = `<div class="results-area"><h3>📅 Код года</h3>${yearsHtml}${yearFullDesc}</div><div class="results-area"><h3>📆 Месяцы ${year} года</h3>${monthsHtml}${monthSelect}<h3>📅 Коды на каждый день (месяц ${month})</h3>${dailyGrid}</div>`;
     document.getElementById('forecastPayWall').style.display = 'block';
@@ -918,6 +1022,7 @@ function renderForecast(year, month=1) {
     document.querySelectorAll('#forecastResults .daily-card').forEach(c => c.addEventListener('click', () => showDailyDesc(parseInt(c.dataset.day), c.dataset.code)));
     document.getElementById('forecastMonthSelect').onchange = () => renderForecast(year, parseInt(document.getElementById('forecastMonthSelect').value));
     if(document.getElementById('forecastMonthSelect')) document.getElementById('forecastMonthSelect').value = month;
+    document.getElementById('forecastResults').style.display = 'block';
 }
 
 document.getElementById('calcForecastBtn').onclick = () => {
@@ -935,9 +1040,8 @@ document.getElementById('calcForecastBtn').onclick = () => {
         while(second>9) second = Math.floor(second/10)+(second%10);
         forecastYearly.push({ year: forecastStartYear+i, display: first+'/'+second });
     }
-    document.getElementById('forecastResults').style.display = 'block';
     renderForecast(forecastStartYear);
-    forecastPaid = false;
+    forecastPaid = forecastPaid;
 };
 
 document.getElementById('forecastPayBtn').onclick = () => {
@@ -946,11 +1050,17 @@ document.getElementById('forecastPayBtn').onclick = () => {
     showPaymentModal("Расшифровка личного прогноза (год+месяцы+дни)", 1490, "forecast", { birth, year: forecastCurrentYear });
 };
 
+// ============================================================================
+// 27. КАРТА ДНЯ
+// ============================================================================
 document.getElementById('drawCardBtn').onclick = () => {
     let card = CARDS[Math.floor(Math.random()*CARDS.length)];
     document.getElementById('cardResult').innerHTML = `<img src="${card.img}" style="max-width:200px; border-radius:20px; margin-bottom:12px;"><div style="font-weight:600; margin-top:12px; font-size:1.1rem;">✨ ${card.name} ✨</div>`;
 };
 
+// ============================================================================
+// 28. ГАЙДЫ (вкладка)
+// ============================================================================
 const guides = [
     { title: "📘 Гайд «Все о беременности»", price: 990, img: "https://raw.githubusercontent.com/olgapereberina19-code/gid/main/обложка%20все%20о%20беременности.png", desc: "Благодаря этому гайду ты узнаешь:\n- Есть ли у тебя энергетические блоки, которые могут мешать тебе забеременеть и как с ними работать\n- Есть ли у тебя негативные родовые программы, которые могут мешать тебе забеременеть и что с ними делать\n- Есть ли у тебя кармические отработки, которые могут мешать тебе забеременеть и что с ними делать\n\n⚠️ Данный гайд рассматривает проблемы зачатия с энергетической точки зрения и не является медицинской рекомендацией. В первую очередь при планировании беременности и проблемах в этой сфере обращайтесь к врачу." },
     { title: "💑 Гайд «Ваша совместимость»", price: 990, img: "https://raw.githubusercontent.com/olgapereberina19-code/gid/main/обложка%20Ваша%20совместимость.png", desc: "Благодаря этому гайду ты узнаешь:\n- Общую характеристику вашего союза\n- Перспективу ваших отношений\n- Плюсы и минусы союза\n- Особенности вашего союза\n- Особенности интимной сферы\n- Четкие рекомендации, как общие, так и для каждого партнера\n- Все об энергообмене в паре и поймешь нет ли у вас каких-то сбоев\n- Сможешь рассчитать идеальную дату для вашей свадьбы" },
@@ -966,6 +1076,9 @@ function renderShop() {
 }
 renderShop();
 
+// ============================================================================
+// 29. МОДАЛЬНОЕ ОКНО ДЛЯ ОПЛАТЫ
+// ============================================================================
 let currentPayment = { name: "", price: 0, type: "", extra: null };
 const modalDiv = document.getElementById('paymentModal');
 const agreeDocsCheck = document.getElementById('agreeDocs');
@@ -975,201 +1088,151 @@ function showPaymentModal(name, price, type, extra = null) {
     currentPayment = { name, price, type, extra };
     document.getElementById('modalTitle').innerText = type === 'guide' ? '💳 Оформление заказа' : '💳 Оплата расшифровки';
     document.getElementById('modalProductInfo').innerHTML = `<strong>${name}</strong><br>Стоимость: ${price}₽`;
-    
-    let extraHtml = `<div class="modal-field"><label>📧 Ваш email (обязательно)</label><input type="email" id="modalEmail" placeholder="example@mail.ru" required></div>`;
-    let footnote = 'После оплаты вы вернётесь на сайт и увидите полную расшифровку.';
-    
+    let extraHtml = '', footnote = '';
     if(type === 'guide'){
-        footnote = 'Гайд придёт на указанный email после оплаты.';
+        extraHtml = '';
+        footnote = 'Вы будете перенаправлены на страницу оплаты.';
     } else if(type === 'main'){
-        extraHtml += `<div class="modal-field"><label>📅 Подтвердите дату рождения</label><input type="date" id="modalBirth" value="${extra?.birth || ''}" required></div>`;
+        extraHtml = `<div class="modal-field"><label>📅 Подтвердите дату рождения</label><input type="date" id="modalBirth" value="${extra?.birth || ''}" required></div>`;
+        footnote = 'Пожалуйста, подтвердите дату рождения для получения расшифровки.';
     } else if(type === 'preg'){
-        extraHtml += `<div class="modal-field"><label>📅 Подтвердите дату рождения</label><input type="date" id="modalBirth" value="${extra?.birth || ''}" required></div>
-                      <div class="modal-field"><label>📅 Подтвердите нужный год</label><input type="number" id="modalYear" value="${extra?.year || ''}" required></div>`;
+        extraHtml = `<div class="modal-field"><label>📅 Подтвердите дату рождения</label><input type="date" id="modalBirth" value="${extra?.birth || ''}" required></div><div class="modal-field"><label>📅 Подтвердите нужный год</label><input type="number" id="modalYear" value="${extra?.year || ''}" required></div>`;
+        footnote = 'Расшифровка прогноза беременности.';
     } else if(type === 'compat'){
-        extraHtml += `<div class="modal-field"><label>👨 Подтвердите дату мужчины</label><input type="date" id="modalMale" value="${extra?.male || ''}" required></div>
-                      <div class="modal-field"><label>👩 Подтвердите дату женщины</label><input type="date" id="modalFemale" value="${extra?.female || ''}" required></div>`;
+        extraHtml = `<div class="modal-field"><label>👨 Подтвердите дату мужчины</label><input type="date" id="modalMale" value="${extra?.male || ''}" required></div><div class="modal-field"><label>👩 Подтвердите дату женщины</label><input type="date" id="modalFemale" value="${extra?.female || ''}" required></div>`;
+        footnote = 'Подтвердите даты для расчёта совместимости.';
     } else if(type === 'forecast'){
-        extraHtml += `<div class="modal-field"><label>📅 Подтвердите дату рождения</label><input type="date" id="modalBirth" value="${extra?.birth || ''}" required></div>
-                      <div class="modal-field"><label>📅 Подтвердите нужный год</label><input type="number" id="modalYear" value="${extra?.year || ''}" required></div>`;
+        extraHtml = `<div class="modal-field"><label>📅 Подтвердите дату рождения</label><input type="date" id="modalBirth" value="${extra?.birth || ''}" required></div><div class="modal-field"><label>📅 Подтвердите нужный год</label><input type="number" id="modalYear" value="${extra?.year || ''}" required></div>`;
+        footnote = 'Прогноз на год, месяцы и дни.';
     }
-    
     document.getElementById('modalExtraFields').innerHTML = extraHtml;
     document.getElementById('modalFootnote').innerHTML = footnote;
     agreeDocsCheck.checked = false;
     document.getElementById('agreeMail').checked = false;
     modalPayBtnElem.disabled = true;
     modalDiv.style.display = 'flex';
-    
     agreeDocsCheck.onchange = () => { modalPayBtnElem.disabled = !agreeDocsCheck.checked; };
 }
 
 document.getElementById('modalCancel').onclick = () => { modalDiv.style.display = 'none'; };
 
+// ⬇⬇⬇ ВСТАВЬТЕ ВАШИ ССЫЛКИ НА ОПЛАТУ В ПРОДАМУСЕ ⬇⬇⬇
 const paymentLinks = {
-    "Гайд «Прокачка 2.0»": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
-    "Гайд «Все о беременности»": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
-    "Гайд «Ваша совместимость»": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
-    "Гайд «Все о твоих финансах»": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
-    "Гайд «Твое истинное Я»": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
-    "Гайд «Путеводитель по мужчинам»": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
-    "Расшифровка нумерологического портрета": "https://payform.ru/q4bGXpI/",
-    "Расшифровка прогноза беременности": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
-    "Полная расшифровка совместимости": "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ",
-    "Расшифровка личного прогноза": "https://payform.ru/ndbFkYs/"
+    "Гайд «Прокачка 2.0»": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Гайд «Все о беременности»": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Гайд «Ваша совместимость»": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Гайд «Все о твоих финансах»": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Гайд «Твое истинное Я»": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Гайд «Путеводитель по мужчинам»": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Расшифровка нумерологического портрета": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Расшифровка прогноза беременности": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Полная расшифровка совместимости": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Расшифровка личного прогноза": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ"
 };
+// ⬆⬆⬆ ВСТАВЬТЕ ВАШИ ССЫЛКИ ВЫШЕ ⬆⬆⬆
 
 document.getElementById('modalPayBtn').onclick = () => {
-    const userEmail = document.getElementById('modalEmail')?.value;
-    if (!userEmail || !userEmail.includes('@')) {
-        alert("Пожалуйста, укажите корректный email");
-        return;
-    }
-    
-    localStorage.setItem('user_email', userEmail);
-    
     if(currentPayment.type === 'main'){
         let birth = document.getElementById('modalBirth')?.value;
         if(!birth){ alert("Подтвердите дату рождения"); return; }
         localStorage.setItem('mainBirth', birth);
-        localStorage.setItem('pending_main', userEmail);
     } else if(currentPayment.type === 'preg'){
         let birth = document.getElementById('modalBirth')?.value;
         let year = document.getElementById('modalYear')?.value;
         if(!birth || !year){ alert("Подтвердите дату и год"); return; }
         localStorage.setItem('pregBirth', birth);
         localStorage.setItem('pregYear', year);
-        localStorage.setItem('pending_preg', userEmail);
     } else if(currentPayment.type === 'compat'){
         let male = document.getElementById('modalMale')?.value;
         let female = document.getElementById('modalFemale')?.value;
         if(!male || !female){ alert("Подтвердите даты"); return; }
         localStorage.setItem('compatMale', male);
         localStorage.setItem('compatFemale', female);
-        localStorage.setItem('pending_compat', userEmail);
     } else if(currentPayment.type === 'forecast'){
         let birth = document.getElementById('modalBirth')?.value;
         let year = document.getElementById('modalYear')?.value;
         if(!birth || !year){ alert("Подтвердите дату и год"); return; }
         localStorage.setItem('forecastBirth', birth);
         localStorage.setItem('forecastYear', year);
-        localStorage.setItem('pending_forecast', userEmail);
-    } else if(currentPayment.type === 'guide'){
-        localStorage.setItem('pending_guide', userEmail);
-        localStorage.setItem('guide_name', currentPayment.name);
     }
     
     modalDiv.style.display = 'none';
     
     let payUrl = paymentLinks[currentPayment.name];
-    if(payUrl && payUrl !== "ЗАМЕНИТЕ_НА_ВАШУ_ССЫЛКУ"){
-        let separator = payUrl.includes('?') ? '&' : '?';
-        window.location.href = payUrl + separator + 'email=' + encodeURIComponent(userEmail);
+    if(payUrl && payUrl !== "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ"){
+        window.location.href = payUrl;
     } else {
-        alert(`Оплата заказа «${currentPayment.name}» на сумму ${currentPayment.price}₽.\n\nПосле оплаты расшифровка откроется автоматически.`);
-        localStorage.setItem('paid_email', userEmail);
-        checkIfUserPaid();
+        alert(`Оплата заказа «${currentPayment.name}» на сумму ${currentPayment.price}₽.\n\nВставьте ссылку на оплату в объект paymentLinks в коде.`);
+        if(currentPayment.type === 'main'){
+            mainPaid = true;
+            document.getElementById('calcMainBtn').click();
+        } else if(currentPayment.type === 'preg'){
+            pregPaid = true;
+            let savedYear = localStorage.getItem('pregYear');
+            if(savedYear) renderPregnancy(parseInt(savedYear));
+            else document.getElementById('calcPregBtn').click();
+        } else if(currentPayment.type === 'compat'){
+            compatPaid = true;
+            renderCompat();
+        } else if(currentPayment.type === 'forecast'){
+            forecastPaid = true;
+            let savedYear = localStorage.getItem('forecastYear');
+            if(savedYear) renderForecast(parseInt(savedYear));
+            else document.getElementById('calcForecastBtn').click();
+        } else if(currentPayment.type === 'guide'){
+            alert(`Спасибо за заказ! Ссылка на оплату: ${paymentLinks[currentPayment.name] || "не указана"}`);
+        }
     }
 };
 
-function checkIfUserPaid() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentSuccess = urlParams.get('payment') === 'success';
-    
-    if (paymentSuccess) {
-        const userEmail = localStorage.getItem('user_email');
-        if (userEmail) {
-            localStorage.setItem('paid_email', userEmail);
+// ============================================================================
+// 30. ВОССТАНОВЛЕНИЕ ПОСЛЕ ОПЛАТЫ
+// ============================================================================
+window.onload = function() {
+    // Проверяем флаги оплаты из localStorage
+    if(localStorage.getItem('mainPaid') === 'true'){
+        mainPaid = true;
+        let savedBirth = localStorage.getItem('mainBirth');
+        if(savedBirth){
+            document.getElementById('birthMain').value = savedBirth;
+            document.getElementById('calcMainBtn').click();
         }
-        window.history.replaceState({}, document.title, window.location.pathname);
+        localStorage.removeItem('mainPaid');
     }
-    
-    const userEmail = localStorage.getItem('user_email');
-    const paidEmail = localStorage.getItem('paid_email');
-    
-    if (paidEmail && userEmail === paidEmail) {
-        if (localStorage.getItem('pending_main')) {
-            mainPaid = true;
-            setTimeout(() => {
-                const birth = localStorage.getItem('mainBirth');
-                if (birth && currentMainData) showFullMainDecode();
-                else if (birth) {
-                    document.getElementById('birthMain').value = birth;
-                    document.getElementById('calcMainBtn').click();
-                    setTimeout(() => { if (currentMainData) showFullMainDecode(); }, 500);
-                }
-            }, 300);
-            localStorage.removeItem('pending_main');
+    if(localStorage.getItem('pregPaid') === 'true'){
+        pregPaid = true;
+        let savedBirth = localStorage.getItem('pregBirth');
+        if(savedBirth){
+            document.getElementById('birthPreg').value = savedBirth;
+            document.getElementById('calcPregBtn').click();
         }
-        
-        if (localStorage.getItem('pending_preg')) {
-            pregPaid = true;
-            setTimeout(() => {
-                const birth = localStorage.getItem('pregBirth');
-                if (birth) {
-                    document.getElementById('birthPreg').value = birth;
-                    document.getElementById('calcPregBtn').click();
-                    setTimeout(() => { if (pregCurrentYear) renderPregnancy(pregCurrentYear); }, 500);
-                }
-            }, 300);
-            localStorage.removeItem('pending_preg');
-        }
-        
-        if (localStorage.getItem('pending_compat')) {
-            compatPaid = true;
-            setTimeout(() => {
-                const male = localStorage.getItem('compatMale');
-                const female = localStorage.getItem('compatFemale');
-                if (male && female) {
-                    document.getElementById('birthMale').value = male;
-                    document.getElementById('birthFemale').value = female;
-                    document.getElementById('calcCompatBtn').click();
-                    setTimeout(() => renderCompat(), 500);
-                }
-            }, 300);
-            localStorage.removeItem('pending_compat');
-        }
-        
-        if (localStorage.getItem('pending_forecast')) {
-            forecastPaid = true;
-            setTimeout(() => {
-                const birth = localStorage.getItem('forecastBirth');
-                if (birth) {
-                    document.getElementById('birthForecast').value = birth;
-                    document.getElementById('calcForecastBtn').click();
-                    setTimeout(() => { if (forecastCurrentYear) renderForecast(forecastCurrentYear); }, 500);
-                }
-            }, 300);
-            localStorage.removeItem('pending_forecast');
-        }
-        
-        localStorage.removeItem('paid_email');
-        localStorage.removeItem('user_email');
+        localStorage.removeItem('pregPaid');
     }
-}
+    if(localStorage.getItem('compatPaid') === 'true'){
+        compatPaid = true;
+        let savedMale = localStorage.getItem('compatMale');
+        let savedFemale = localStorage.getItem('compatFemale');
+        if(savedMale && savedFemale){
+            document.getElementById('birthMale').value = savedMale;
+            document.getElementById('birthFemale').value = savedFemale;
+            document.getElementById('calcCompatBtn').click();
+        }
+        localStorage.removeItem('compatPaid');
+    }
+    if(localStorage.getItem('forecastPaid') === 'true'){
+        forecastPaid = true;
+        let savedBirth = localStorage.getItem('forecastBirth');
+        if(savedBirth){
+            document.getElementById('birthForecast').value = savedBirth;
+            document.getElementById('calcForecastBtn').click();
+        }
+        localStorage.removeItem('forecastPaid');
+    }
+};
 
-function showFullMainDecode() {
-    mainPaid = true;
-    const chFull = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"].map((n,i) => 
-        `<div class="result-block"><strong>${n}: ${currentMainData.ch[i]}%</strong><div class="full-text">${chakraFull[n][getChakraStatus(currentMainData.ch[i])]}</div></div>`
-    ).join('');
-    
-    const fullHtml = `
-        <div class="result-block"><strong>🧠 Психотип:</strong> ${currentMainData.pnum}<div class="full-text">${psychotypesFull[currentMainData.pnum]}</div></div>
-        ${chFull}
-        <div class="result-block"><strong>🏛 Задача рода:</strong> ${currentMainData.rodDisplay}<div class="full-text">${rodFull[currentMainData.rodFirst]}</div></div>
-        <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${currentMainData.pastDisplay}<div class="full-text">${pastFull[currentMainData.pastFirst]}</div></div>
-        <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${currentMainData.presDisplay}<div class="full-text">${presentFull[currentMainData.presFirst]}</div></div>
-        <div class="result-block"><strong>👪 Задача родителей:</strong> ${currentMainData.parentsDisplay}<div class="full-text">${parentsFull[currentMainData.parentsFirst]}</div></div>
-        <div class="result-block"><strong>📆 Периоды жизни:</strong> ${currentMainData.periods.map((p,i)=>`<div>${p} — ${periodNames[p]} (${currentMainData.agesList[i]})</div><div class="full-text">${periodsFull[p]}</div>`).join('')}</div>`;
-    
-    document.getElementById('mainResults').innerHTML = fullHtml;
-    document.getElementById('pdfButtons').style.display = 'block';
-    const payBtn = document.getElementById('mainPayBtn');
-    if (payBtn) payBtn.style.display = 'none';
-    alert('✅ Расшифровка открыта!');
-}
-
+// ============================================================================
+// 31. ПОЛИТИКА И ОФЕРТА (ВСТАВЬТЕ ССЫЛКИ НА ДОКУМЕНТЫ)
+// ============================================================================
 document.getElementById('offerLink').onclick = (e) => {
     e.preventDefault();
     window.open("ВСТАВЬТЕ_ССЫЛКУ_НА_ПУБЛИЧНУЮ_ОФЕРТУ", "_blank");
@@ -1178,10 +1241,17 @@ document.getElementById('privacyLink').onclick = (e) => {
     e.preventDefault();
     window.open("ВСТАВЬТЕ_ССЫЛКУ_НА_ПОЛИТИКУ_ПД", "_blank");
 };
+
+// ============================================================================
+// 32. КНОПКА "ЗАПИСАТЬСЯ НА КОНСУЛЬТАЦИЮ"
+// ============================================================================
 document.getElementById('consultNavBtn').onclick = () => {
     window.open("ВСТАВЬТЕ_ССЫЛКУ_НА_ТЕЛЕГРАМ_ИЛИ_WHATSAPP", "_blank");
 };
 
+// ============================================================================
+// 33. НАВИГАЦИЯ
+// ============================================================================
 document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', function(){
         let tabId = this.dataset.tab;
@@ -1194,106 +1264,11 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     });
 });
 
+// Активация первого таба по умолчанию
 document.querySelector('.nav-btn').click();
 document.getElementById('pdfDownloadBtn').onclick = () => { html2pdf().from(document.getElementById('mainResults')).save(); };
 
-checkIfUserPaid();
 console.log("Сайт полностью загружен и работает!");
-    <script>
-// ============================================================
-// АВТООТКРЫТИЕ РАСШИФРОВКИ ПОСЛЕ ОПЛАТЫ (ДОБАВЛЕННЫЙ БЛОК)
-// ============================================================
-
-// Функция для принудительного открытия расшифровки
-function forceOpenMainDecode() {
-    console.log("▶️ Запуск открытия расшифровки");
-    
-    let birth = localStorage.getItem('auto_birth');
-    if (!birth) {
-        birth = document.getElementById('birthMain')?.value;
-        if (birth) {
-            localStorage.setItem('auto_birth', birth);
-        } else {
-            console.log("❌ Нет даты рождения");
-            return;
-        }
-    }
-    
-    if (document.getElementById('birthMain').value !== birth) {
-        document.getElementById('birthMain').value = birth;
-    }
-    
-    // Если данные уже есть в currentMainData
-    if (typeof currentMainData !== 'undefined' && currentMainData && currentMainData.pnum) {
-        console.log("✅ currentMainData уже есть, открываем");
-        if (typeof showFullMainDecode === 'function') {
-            showFullMainDecode();
-        } else if (typeof showFullDecode === 'function') {
-            showFullDecode();
-        } else {
-            console.log("❌ Функция открытия не найдена");
-        }
-        localStorage.removeItem('auto_birth');
-        return;
-    }
-    
-    // Если нет — рассчитываем заново
-    console.log("🔄 Рассчитываем заново");
-    document.getElementById('calcMainBtn').click();
-    
-    let attempts = 0;
-    let checkInterval = setInterval(() => {
-        attempts++;
-        if (typeof currentMainData !== 'undefined' && currentMainData && currentMainData.pnum) {
-            clearInterval(checkInterval);
-            if (typeof showFullMainDecode === 'function') {
-                showFullMainDecode();
-            } else if (typeof showFullDecode === 'function') {
-                showFullDecode();
-            }
-            localStorage.removeItem('auto_birth');
-            console.log("✅ Расшифровка открыта!");
-        } else if (attempts > 30) {
-            clearInterval(checkInterval);
-            console.log("❌ Таймаут");
-            alert('Расшифровка не открылась автоматически. Нажмите "Рассчитать", затем кнопку оплаты (она исчезнет, если оплачено)');
-        }
-    }, 500);
-}
-
-// Проверяем URL при загрузке
-if (window.location.href.includes('paid=1') || window.location.href.includes('success') || window.location.href.includes('payment=success')) {
-    console.log("✅ Обнаружен параметр оплаты в URL");
-    localStorage.setItem('auto_birth', document.getElementById('birthMain')?.value);
-    localStorage.setItem('paid_confirmed', 'true');
-    
-    // Очищаем URL
-    window.history.replaceState({}, document.title, window.location.pathname);
-    
-    // Открываем расшифровку
-    setTimeout(forceOpenMainDecode, 1000);
-}
-
-// Если есть флаг оплаты
-if (localStorage.getItem('paid_confirmed') === 'true') {
-    localStorage.removeItem('paid_confirmed');
-    setTimeout(forceOpenMainDecode, 500);
-}
-
-// Сохраняем дату при нажатии на кнопку оплаты
-const originalPayClick = document.getElementById('mainPayBtn')?.onclick;
-if (document.getElementById('mainPayBtn')) {
-    document.getElementById('mainPayBtn').onclick = () => {
-        const birth = document.getElementById('birthMain')?.value;
-        if (birth) {
-            localStorage.setItem('auto_birth', birth);
-        }
-        if (originalPayClick) originalPayClick();
-    };
-}
-
-console.log("✅ Блок автооткрытия добавлен!");
-</script>
 </script>
 </body>
 </html>
