@@ -161,7 +161,8 @@
 // ============================================================================
 // // ============================================================================
 // ============================================================================
-// НОВЫЙ БЛОК: АВТОМАТИЧЕСКОЕ ОТКРЫТИЕ ПОСЛЕ ОПЛАТЫ ЧЕРЕЗ PRODAMUS
+// ============================================================================
+// АВТОМАТИЧЕСКОЕ ОТКРЫТИЕ ПОСЛЕ ОПЛАТЫ
 // ============================================================================
 (function autoOpenAfterPayment() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -180,6 +181,15 @@
         localStorage.setItem('pregPaid', 'true');
         localStorage.setItem('compatPaid', 'true');
         localStorage.setItem('forecastPaid', 'true');
+        
+        // ВАЖНО: устанавливаем флаг для прогноза
+        if (tab === 'forecast') {
+            const savedYear = localStorage.getItem('forecastYear');
+            if (savedYear) {
+                forecastPaidYear = parseInt(savedYear);
+            }
+            forecastPaid = true;
+        }
         
         if (!tab || tab === 'main') {
             document.querySelector('[data-tab="tab1"]').click();
@@ -209,17 +219,16 @@
             document.querySelector('[data-tab="tab4"]').click();
             const savedBirth = localStorage.getItem('forecastBirth');
             const savedYear = localStorage.getItem('forecastYear');
-            if (savedBirth && savedYear) {
+            if (savedBirth) {
                 document.getElementById('birthForecast').value = savedBirth;
-                forecastPaid = true;
-                forecastPaidYear = parseInt(savedYear);
                 document.getElementById('calcForecastBtn').click();
+                // Даём время на расчёт и обновляем
                 setTimeout(() => {
-                    renderForecast(forecastPaidYear);
-                }, 500);
-            } else if (savedBirth) {
-                document.getElementById('birthForecast').value = savedBirth;
-                document.getElementById('calcForecastBtn').click();
+                    if (savedYear) {
+                        forecastPaidYear = parseInt(savedYear);
+                        renderForecast(forecastPaidYear);
+                    }
+                }, 1000);
             }
         }
         
@@ -1069,8 +1078,8 @@ function generateForecastPDF() {
             <table style="width:100%; border-collapse:collapse; margin:20px 0;">
                 <thead><tr style="background:#F3EDE6;"><th style="border:1px solid #ddd; padding:10px;">Месяц</th><th style="border:1px solid #ddd; padding:10px;">Код</th><th style="border:1px solid #ddd; padding:10px;">Расшифровка</th></tr></thead>
                 <tbody>${monthsHtml}</tbody>
-            </table>
-            
+            实
+    
             <div style="page-break-before:always;"></div>
             <h2 style="font-size:22px; margin:30px 0 15px;">📅 Прогноз по дням</h2>
             ${allDaysHtml}
@@ -1126,7 +1135,7 @@ function renderForecast(year, month=1) {
     
     let yearFullDesc = `<div class="full-text" style="margin-top:16px;">${forecastPaid ? (forecastYearDecodes[forecastYearly.find(c=>c.year===year)?.display] || "🔓") : "🔒 Полная расшифровка года откроется после оплаты"}</div>`;
     let monthSelect = `<select id="forecastMonthSelect" style="margin:16px 0; padding:8px;"><option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option><option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option><option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option><option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option></select>`;
-    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${forecastPaid ? (forecastMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
+    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${forecastPaid ? (forecastMonthDecodes[m.display] || "🔓") : "🔒"}</tr></tr>`).join('')}</tbody></table>`;
     let pdfButton = forecastPaid ? `<div style="text-align:center; margin:20px 0;"><button id="forecastPdfBtn" class="pay-btn" style="background:#4CAF50;">📥 Скачать прогноз в PDF</button></div>` : '';
     
     document.getElementById('forecastResults').innerHTML = `<div class="results-area"><h3>📅 Код года</h3>${yearsHtml}${yearFullDesc}</div><div class="results-area"><h3>📆 Месяцы ${year} года</h3>${monthsHtml}${monthSelect}<h3>📅 Коды на каждый день (месяц ${month})</h3>${dailyGrid}${pdfButton}</div>`;
@@ -1189,7 +1198,6 @@ document.getElementById('forecastPayBtn').onclick = () => {
     if(!year){ alert("Выберите год"); return; }
     showPaymentModal("Расшифровка личного прогноза (год+месяцы+дни)", 1490, "forecast", { birth, year: year });
 };
-
 // ============================================================================
 // 27. КАРТА ДНЯ
 // ============================================================================
