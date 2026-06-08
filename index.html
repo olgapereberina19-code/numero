@@ -156,68 +156,81 @@
 
 <script>
 // ============================================================================
+//// ============================================================================
 // НОВЫЙ БЛОК: АВТОМАТИЧЕСКОЕ ОТКРЫТИЕ ПОСЛЕ ОПЛАТЫ ЧЕРЕЗ PRODAMUS
 // ============================================================================
 (function autoOpenAfterPayment() {
     const urlParams = new URLSearchParams(window.location.search);
     const paid = urlParams.get('paid');
+    const tab = urlParams.get('tab'); // main, preg, compat, forecast
     
     if (paid === '1') {
-        // Показываем уведомление
-        setTimeout(() => {
-            alert('✅ Оплата прошла успешно! Теперь ваша расшифровка открыта полностью.');
-        }, 500);
+        // Показываем уведомление в зависимости от типа
+        let message = '✅ Оплата прошла успешно! ';
+        if (!tab || tab === 'main') {
+            message += 'Ваш нумерологический портрет теперь открыт полностью.';
+        } else if (tab === 'preg') {
+            message += 'Ваш прогноз беременности теперь открыт полностью.';
+        } else if (tab === 'compat') {
+            message += 'Ваша расшифровка совместимости теперь открыта полностью.';
+        } else if (tab === 'forecast') {
+            message += 'Ваш личный прогноз теперь открыт полностью.';
+        }
+        setTimeout(() => { alert(message); }, 500);
         
-        // Сохраняем флаги оплаты для всех типов калькуляторов
-        // Пользователь сам выберет, какую расшифровку хочет открыть
+        // Устанавливаем флаги оплаты
         localStorage.setItem('mainPaid', 'true');
         localStorage.setItem('pregPaid', 'true');
         localStorage.setItem('compatPaid', 'true');
         localStorage.setItem('forecastPaid', 'true');
         
-        // Пытаемся восстановить сохранённые даты
-        const savedMainBirth = localStorage.getItem('mainBirth');
-        const savedPregBirth = localStorage.getItem('pregBirth');
-        const savedForecastBirth = localStorage.getItem('forecastBirth');
-        const savedCompatMale = localStorage.getItem('compatMale');
-        const savedCompatFemale = localStorage.getItem('compatFemale');
-        
-        // Если есть сохранённые даты для портрета — автоматически показываем расшифровку
-        if (savedMainBirth) {
-            document.getElementById('birthMain').value = savedMainBirth;
-            document.getElementById('calcMainBtn').click();
-            setTimeout(() => {
-                if (document.getElementById('mainResults')) {
-                    // Прокручиваем к результатам
+        // Открываем нужную вкладку в зависимости от параметра tab
+        if (!tab || tab === 'main') {
+            // Нумерологический портрет
+            document.querySelector('[data-tab="tab1"]').click();
+            const savedBirth = localStorage.getItem('mainBirth');
+            if (savedBirth) {
+                document.getElementById('birthMain').value = savedBirth;
+                document.getElementById('calcMainBtn').click();
+                setTimeout(() => {
                     document.getElementById('mainResults').scrollIntoView({ behavior: 'smooth' });
-                }
-            }, 300);
+                }, 300);
+            }
+        } 
+        else if (tab === 'preg') {
+            // Беременность
+            document.querySelector('[data-tab="tab2"]').click();
+            const savedBirth = localStorage.getItem('pregBirth');
+            if (savedBirth) {
+                document.getElementById('birthPreg').value = savedBirth;
+                document.getElementById('calcPregBtn').click();
+            }
+        }
+        else if (tab === 'compat') {
+            // Совместимость
+            document.querySelector('[data-tab="tab3"]').click();
+            const savedMale = localStorage.getItem('compatMale');
+            const savedFemale = localStorage.getItem('compatFemale');
+            if (savedMale && savedFemale) {
+                document.getElementById('birthMale').value = savedMale;
+                document.getElementById('birthFemale').value = savedFemale;
+                document.getElementById('calcCompatBtn').click();
+            }
+        }
+        else if (tab === 'forecast') {
+            // Личный прогноз
+            document.querySelector('[data-tab="tab4"]').click();
+            const savedBirth = localStorage.getItem('forecastBirth');
+            if (savedBirth) {
+                document.getElementById('birthForecast').value = savedBirth;
+                document.getElementById('calcForecastBtn').click();
+            }
         }
         
-        // Если есть сохранённые даты для беременности
-        if (savedPregBirth) {
-            document.getElementById('birthPreg').value = savedPregBirth;
-            document.getElementById('calcPregBtn').click();
-        }
-        
-        // Если есть сохранённые даты для прогноза
-        if (savedForecastBirth) {
-            document.getElementById('birthForecast').value = savedForecastBirth;
-            document.getElementById('calcForecastBtn').click();
-        }
-        
-        // Если есть сохранённые даты для совместимости
-        if (savedCompatMale && savedCompatFemale) {
-            document.getElementById('birthMale').value = savedCompatMale;
-            document.getElementById('birthFemale').value = savedCompatFemale;
-            document.getElementById('calcCompatBtn').click();
-        }
-        
-        // Очищаем URL от параметра paid=1 (чтобы при обновлении страницы не было повторного уведомления)
+        // Очищаем URL от параметров
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 })();
-
 // ============================================================================
 // 1. ПСИХОТИПЫ (1–9) - КАЖДЫЙ С НОВОЙ СТРОКИ
 // ============================================================================
