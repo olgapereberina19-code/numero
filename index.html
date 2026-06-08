@@ -143,17 +143,16 @@
     <!-- ГАЙДЫ -->
     <div id="tab6" class="calculator-panel"><h2>📚 Мои гайды</h2><div class="product-grid" id="shopGrid"></div></div>
 
-    <footer>
-        <div class="footer-links">
-            <a href="#" id="offerLink">Публичная оферта</a>
-            <a href="#" id="privacyLink">Политика обработки ПД</a>
-        </div>
-        <div>ИП Переберина Ольга Сергеевна | ИНН 780440939257 | ОГРНИП 324784700412001</div>
-        <div>📧 ai_numerolog@mail.ru | 📱 <a href="https://t.me/psyofchakras" target="_blank">Канал «Психология чакр»</a></div>
-    </footer>
-</div>
+  <footer>
+    <div class="footer-links">
+        <a href="#" id="offerLink">Публичная оферта</a>
+        <a href="#" id="privacyLink">Политика обработки ПД</a>
+        <a href="#" id="consentLink">Согласие на обработку ПД</a>
+    </div>
+    <div>ИП Переберина Ольга Сергеевна | ИНН 780440939257 | ОГРНИП 324784700412001</div>
+    <div>📧 ai_numerolog@mail.ru | 📱 <a href="https://t.me/psyofchakras" target="_blank">Канал «Психология чакр»</a></div>
 
-<div id="paymentModal" class="modal"><div class="modal-content"><h3 id="modalTitle">💳 Оформление заказа</h3><div id="modalProductInfo" class="product-line"></div><div id="modalExtraFields"></div><div class="modal-checkbox"><input type="checkbox" id="agreeDocs"><label>Я ознакомлен/-на с условиями публичной оферты, принимаю условия Политики конфиденциальности и даю согласие на обработку персональных данных. *</label></div><div class="modal-checkbox"><input type="checkbox" id="agreeMail"><label>Я согласен/-на получать информационно-рекламные письма. (необязательно)</label></div><div class="modal-buttons"><button class="btn-cancel" id="modalCancel">Отмена</button><button class="btn-pay" id="modalPayBtn" disabled>Оплатить</button></div><div id="modalFootnote" class="modal-footnote"></div></div></div>
+<div id="paymentModal" class="modal"><div class="modal-content"><h3 id="modalTitle">💳 Оформление заказа</h3><div id="modalProductInfo" class="product-line"></div><div id="modalExtraFields"></div><div class="modal-checkbox"><input type="checkbox" id="agreeDocs"><label>Я ознакомлен(а) с условиями публичной оферты, принимаю условия Политики обработки персональных данных и даю согласие на обработку моих персональных данных (включая дату рождения как специальную категорию) для целей нумерологических расчётов и предоставления услуг.*</label></div><div class="modal-checkbox"><input type="checkbox" id="agreeMail"><label>Я согласен/-на получать информационно-рекламные письма. (необязательно)</label></div><div class="modal-buttons"><button class="btn-cancel" id="modalCancel">Отмена</button><button class="btn-pay" id="modalPayBtn" disabled>Оплатить</button></div><div id="modalFootnote" class="modal-footnote"></div></div></div>
 
 <script>
 // ============================================================================
@@ -1235,11 +1234,16 @@ window.onload = function() {
 // ============================================================================
 document.getElementById('offerLink').onclick = (e) => {
     e.preventDefault();
-    window.open("ВСТАВЬТЕ_ССЫЛКУ_НА_ПУБЛИЧНУЮ_ОФЕРТУ", "_blank");
+    window.open("https://disk.yandex.ru/i/j9G4vfAO0PNMFw", "_blank");
 };
 document.getElementById('privacyLink').onclick = (e) => {
     e.preventDefault();
-    window.open("ВСТАВЬТЕ_ССЫЛКУ_НА_ПОЛИТИКУ_ПД", "_blank");
+    window.open("https://disk.yandex.ru/i/KUMxuJUtEvMmEg", "_blank");
+};
+    document.getElementById('consentLink').onclick = (e) => {
+    e.preventDefault();
+    // ВСТАВЬТЕ ВАШУ ССЫЛКУ НА ДОКУМЕНТ СОГЛАСИЯ (Яндекс.Диск, Google Drive или страница на сайте)
+    window.open("https://disk.yandex.ru/i/d8iNUCfNcOp_fA", "_blank");
 };
 
 // ============================================================================
