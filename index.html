@@ -983,10 +983,9 @@ document.getElementById('downloadCompatPdf').onclick = () => { html2pdf().from(d
 
 // ============================================================================
 // ============================================================================
-// 26. ЛИЧНЫЙ ПРОГНОЗ (С ОГРАНИЧЕНИЕМ ДОСТУПА К ОДНОМУ ГОДУ И PDF)
+// 26. ЛИЧНЫЙ ПРОГНОЗ
 // ============================================================================
 let forecastPaid = false, forecastYearly = [], forecastBase = "", forecastTyp = 0, forecastStartYear = 0, forecastCurrentYear = 0;
-let forecastPaidYear = null;
 
 function getDailyCodes(baseNum, year, month, typ) {
     let prod = BigInt(baseNum) * BigInt(year) * BigInt(month);
@@ -1001,6 +1000,13 @@ function getDailyCodes(baseNum, year, month, typ) {
     return codes;
 }
 
+function getMonthlyCodes(baseNum, year, typ) {
+    let prod = BigInt(baseNum) * BigInt(year);
+    let digits = prod.toString().split('').map(ch => parseInt(ch));
+    let months = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+    return months.map((m,i) => { let first = digits[i%digits.length]; let second = first + typ; while(second>9) second = Math.floor(second/10)+(second%10); return { month:m, display:first+'/'+second }; });
+}
+
 function generateForecastPDF() {
     if (!forecastPaid || !forecastCurrentYear) {
         alert("Сначала оплатите расшифровку нужного года!");
@@ -1010,7 +1016,6 @@ function generateForecastPDF() {
     const year = forecastCurrentYear;
     const yearCode = forecastYearly.find(c => c.year === year)?.display || "";
     const yearDesc = forecastYearDecodes[yearCode] || "Расшифровка отсутствует";
-    
     const monthly = getMonthlyCodes(forecastBase, year, forecastTyp);
     const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
     
@@ -1022,42 +1027,19 @@ function generateForecastPDF() {
         const monthName = months[monthIndex];
         const monthData = monthly[monthIndex];
         const monthCode = monthData.display;
-        const monthDesc = forecastMonthDecodes[monthCode] || "Расшифровка отсутствует";
-        
+        const monthDesc = forecastMonthDecodes[monthCode] || "";
         const daily = getDailyCodes(forecastBase, year, monthNum, forecastTyp);
         const daysInMonthCount = new Date(year, monthNum, 0).getDate();
         
         let daysHtml = '';
         for (let day = 1; day <= daysInMonthCount; day++) {
             const d = daily[day-1];
-            const dayCode = d.code;
-            const dayDesc = forecastDayDecodes[dayCode] || "Расшифровка отсутствует";
-            daysHtml += `
-                <div style="border:1px solid #e0e0e0; border-radius:8px; padding:10px; margin-bottom:8px; background:#fafafa;">
-                    <strong style="font-size:14px; color:#2C2C2C;">📅 День ${day} (код ${dayCode})</strong>
-                    <div style="font-size:13px; line-height:1.4; margin-top:5px; color:#333;">${dayDesc}</div>
-                </div>
-            `;
+            const dayDesc = forecastDayDecodes[d.code] || "";
+            daysHtml += `<div style="border:1px solid #ddd; border-radius:8px; padding:8px; margin-bottom:8px;"><strong>📅 День ${day} (код ${d.code})</strong><br>${dayDesc}</div>`;
         }
         
-        monthsHtml += `
-            <tr>
-                <td style="border:1px solid #ddd; padding:12px; vertical-align:top; width:120px;"><strong>${monthName}</strong></td>
-                <td style="border:1px solid #ddd; padding:12px; vertical-align:top; width:100px;"><strong>${monthCode}</strong></td>
-                <td style="border:1px solid #ddd; padding:12px; vertical-align:top;">${monthDesc}</td>
-             </tr>
-        `;
-        
-        allDaysHtml += `
-            <div style="margin-top:30px; margin-bottom:30px;">
-                <h3 style="font-size:20px; color:#2C2C2C; border-bottom:2px solid #F0EAE3; padding-bottom:8px; margin-bottom:15px;">
-                    📅 ${monthName} ${year} года (${daysInMonthCount} дней)
-                </h3>
-                <div style="display:grid; gap:10px;">
-                    ${daysHtml}
-                </div>
-            </div>
-        `;
+        monthsHtml += `<tr><td style="border:1px solid #ddd; padding:8px;">${monthName}</td><td style="border:1px solid #ddd; padding:8px;">${monthCode}</td><td style="border:1px solid #ddd; padding:8px;">${monthDesc}</td></tr>`;
+        allDaysHtml += `<div style="margin-top:25px;"><h3>📅 ${monthName} ${year} года (${daysInMonthCount} дней)</h3>${daysHtml}</div>`;
     }
     
     const tempDiv = document.createElement('div');
@@ -1065,54 +1047,27 @@ function generateForecastPDF() {
     tempDiv.style.left = '-9999px';
     tempDiv.style.top = '-9999px';
     tempDiv.innerHTML = `
-        <div style="font-family:'Inter',sans-serif; padding:40px; max-width:1000px; margin:0 auto;">
-            <h1 style="font-size:28px; border-bottom:2px solid #F0EAE3; padding-bottom:15px;">🔮 Личный прогноз на ${year} год</h1>
-            <p>Переберина Ольга — нумеролог-чакролог | Дата: ${new Date().toLocaleDateString('ru-RU')}</p>
-            
-            <div style="background:#FAF8F5; padding:20px; border-radius:16px; margin:20px 0;">
-                <strong>📅 Код года: ${yearCode}</strong><br>
-                ${yearDesc}
-            </div>
-            
-            <h2 style="font-size:22px; margin:30px 0 15px;">📆 Прогноз по месяцам</h2>
-            <table style="width:100%; border-collapse:collapse; margin:20px 0;">
-                <thead><tr style="background:#F3EDE6;"><th style="border:1px solid #ddd; padding:10px;">Месяц</th><th style="border:1px solid #ddd; padding:10px;">Код</th><th style="border:1px solid #ddd; padding:10px;">Расшифровка</th></tr></thead>
-                <tbody>${monthsHtml}</tbody>
-            实
-    
+        <div style="font-family:'Inter',sans-serif; padding:40px; max-width:1000px;">
+            <h1 style="font-size:28px;">🔮 Личный прогноз на ${year} год</h1>
+            <p>Переберина Ольга — нумеролог-чакролог | ${new Date().toLocaleDateString('ru-RU')}</p>
+            <div style="background:#f5f5f5; padding:15px; margin:20px 0;"><strong>📅 Код года: ${yearCode}</strong><br>${yearDesc}</div>
+            <h2>📆 Прогноз по месяцам</h2>
+            <table style="width:100%; border-collapse:collapse;">${monthsHtml}追赶
             <div style="page-break-before:always;"></div>
-            <h2 style="font-size:22px; margin:30px 0 15px;">📅 Прогноз по дням</h2>
+            <h2>📅 Прогноз по дням</h2>
             ${allDaysHtml}
-            
-            <div style="margin-top:40px; text-align:center; font-size:11px; color:#B0A396; border-top:1px solid #EFE9E2; padding-top:20px;">
-                <p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p>
-            </div>
+            <div style="margin-top:40px; text-align:center;">© Переберина Ольга | ИНН 780440939257</div>
         </div>
     `;
     document.body.appendChild(tempDiv);
     
-    const opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
-        filename: `Личный_прогноз_${year}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, letterRendering: true },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    
-    html2pdf().set(opt).from(tempDiv).save().then(() => {
+    html2pdf().set({ filename: `Личный_прогноз_${year}.pdf`, margin: 0.5 }).from(tempDiv).save().then(() => {
         document.body.removeChild(tempDiv);
     });
 }
 
 function renderForecast(year, month=1) {
-    if (forecastPaid && forecastPaidYear !== null && forecastPaidYear !== year) {
-        alert(`❌ У вас открыт доступ только к ${forecastPaidYear} году.`);
-        renderForecast(forecastPaidYear, currentMonth);
-        return;
-    }
-    
     forecastCurrentYear = year;
-    currentMonth = month;
     let monthly = getMonthlyCodes(forecastBase, year, forecastTyp);
     let daily = getDailyCodes(forecastBase, year, month, forecastTyp);
     let daysInMonthCount = new Date(year, month, 0).getDate();
@@ -1123,49 +1078,25 @@ function renderForecast(year, month=1) {
     }
     dailyGrid += `</div><div id="dailyFullDesc" class="daily-desc-full"></div>`;
     
-    let yearsHtml = '';
-    if (forecastPaid && forecastPaidYear !== null) {
-        const paidYearData = forecastYearly.find(c => c.year === forecastPaidYear);
-        if (paidYearData) {
-            yearsHtml = `<div class="forecast-years-grid"><div class="forecast-year-card active" data-year="${paidYearData.year}"><div class="year">${paidYearData.year}</div><div class="code">${paidYearData.display}</div><div class="short-desc">✅ Оплачено</div></div></div>`;
-        }
-    } else {
-        yearsHtml = `<div class="forecast-years-grid">${forecastYearly.map(c => `<div class="forecast-year-card ${c.year === year ? 'active' : ''}" data-year="${c.year}"><div class="year">${c.year}</div><div class="code">${c.display}</div><div class="short-desc">${forecastPaid ? (forecastYearDecodes[c.display]?.substring(0,40) || "") : (forecastYearShort[c.display] || "🔒")}</div></div>`).join('')}</div>`;
-    }
-    
+    let yearsHtml = `<div class="forecast-years-grid">${forecastYearly.map(c => `<div class="forecast-year-card ${c.year === year ? 'active' : ''}" data-year="${c.year}"><div class="year">${c.year}</div><div class="code">${c.display}</div><div class="short-desc">${forecastPaid ? (forecastYearDecodes[c.display]?.substring(0,40) || "") : (forecastYearShort[c.display] || "🔒")}</div></div>`).join('')}</div>`;
     let yearFullDesc = `<div class="full-text" style="margin-top:16px;">${forecastPaid ? (forecastYearDecodes[forecastYearly.find(c=>c.year===year)?.display] || "🔓") : "🔒 Полная расшифровка года откроется после оплаты"}</div>`;
-    let monthSelect = `<select id="forecastMonthSelect" style="margin:16px 0; padding:8px;"><option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option><option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option><option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option><option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option></select>`;
-    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${forecastPaid ? (forecastMonthDecodes[m.display] || "🔓") : "🔒"}</tr></tr>`).join('')}</tbody></table>`;
+    let monthSelect = `<select id="forecastMonthSelect" style="margin:16px 0; padding:8px;">${['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'].map((m,i)=>`<option value="${i+1}">${m}</option>`).join('')}</select>`;
+    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${forecastPaid ? (forecastMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
     let pdfButton = forecastPaid ? `<div style="text-align:center; margin:20px 0;"><button id="forecastPdfBtn" class="pay-btn" style="background:#4CAF50;">📥 Скачать прогноз в PDF</button></div>` : '';
     
     document.getElementById('forecastResults').innerHTML = `<div class="results-area"><h3>📅 Код года</h3>${yearsHtml}${yearFullDesc}</div><div class="results-area"><h3>📆 Месяцы ${year} года</h3>${monthsHtml}${monthSelect}<h3>📅 Коды на каждый день (месяц ${month})</h3>${dailyGrid}${pdfButton}</div>`;
     document.getElementById('forecastPayWall').style.display = forecastPaid ? 'none' : 'block';
     
-    document.querySelectorAll('#forecastResults .forecast-year-card').forEach(c => {
-        c.addEventListener('click', () => {
-            const selectedYear = parseInt(c.dataset.year);
-            if (forecastPaid && forecastPaidYear !== null && selectedYear !== forecastPaidYear) {
-                alert(`❌ У вас открыт доступ только к ${forecastPaidYear} году.`);
-                return;
-            }
-            renderForecast(selectedYear);
-        });
-    });
-    document.querySelectorAll('#forecastResults .daily-card').forEach(c => {
-        c.addEventListener('click', () => {
-            let descDiv = document.getElementById('dailyFullDesc');
-            if(descDiv){
-                let fullText = forecastPaid ? (forecastDayDecodes[c.dataset.code] || "Расшифровка отсутствует") : "🔒 Полная расшифровка дня откроется после оплаты";
-                descDiv.innerHTML = `<strong>День ${c.dataset.day} (код ${c.dataset.code})</strong><br>${fullText}`;
-                descDiv.classList.add('show');
-            }
-        });
-    });
+    document.querySelectorAll('#forecastResults .forecast-year-card').forEach(c => c.addEventListener('click', () => renderForecast(parseInt(c.dataset.year))));
+    document.querySelectorAll('#forecastResults .daily-card').forEach(c => c.addEventListener('click', () => {
+        let descDiv = document.getElementById('dailyFullDesc');
+        if(descDiv){
+            descDiv.innerHTML = `<strong>День ${c.dataset.day} (код ${c.dataset.code})</strong><br>${forecastPaid ? (forecastDayDecodes[c.dataset.code] || "🔓") : "🔒"}`;
+            descDiv.classList.add('show');
+        }
+    }));
     let monthSelectElem = document.getElementById('forecastMonthSelect');
-    if(monthSelectElem){
-        monthSelectElem.onchange = () => renderForecast(year, parseInt(monthSelectElem.value));
-        monthSelectElem.value = month;
-    }
+    if(monthSelectElem) monthSelectElem.onchange = () => renderForecast(year, parseInt(monthSelectElem.value));
     let pdfBtn = document.getElementById('forecastPdfBtn');
     if(pdfBtn) pdfBtn.onclick = generateForecastPDF;
     document.getElementById('forecastResults').style.display = 'block';
@@ -1187,8 +1118,10 @@ document.getElementById('calcForecastBtn').onclick = () => {
         forecastYearly.push({ year: forecastStartYear+i, display: first+'/'+second });
     }
     renderForecast(forecastStartYear);
-    forecastPaid = forecastPaid;
-    forecastPaidYear = forecastPaidYear;
+    if(localStorage.getItem('forecastPaid') === 'true'){
+        forecastPaid = true;
+        localStorage.removeItem('forecastPaid');
+    }
 };
 
 document.getElementById('forecastPayBtn').onclick = () => {
