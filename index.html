@@ -989,21 +989,125 @@ function generateForecastPDF() {
     const year = forecastCurrentYear;
     const yearCode = forecastYearly.find(c => c.year === year)?.display || "";
     const yearDesc = forecastYearDecodes[yearCode] || "Расшифровка отсутствует";
+    
     const monthly = getMonthlyCodes(forecastBase, year, forecastTyp);
-    const currentMonth = parseInt(document.getElementById('forecastMonthSelect')?.value || 1);
-    const daily = getDailyCodes(forecastBase, year, currentMonth, forecastTyp);
-    const daysInMonthCount = new Date(year, currentMonth, 0).getDate();
+    const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
     
-    let monthsHtml = '', daysHtml = '';
-    for(let m of monthly) {
-        monthsHtml += `<tr><td style="border:1px solid #ddd; padding:8px;">${m.month}</td><td style="border:1px solid #ddd; padding:8px;">${m.display}</td><td style="border:1px solid #ddd; padding:8px;">${forecastMonthDecodes[m.display] || ""}</td></tr>`;
-    }
-    for(let day=1; day<=daysInMonthCount; day++){
-        let d = daily[day-1];
-        daysHtml += `<div style="border:1px solid #ddd; border-radius:8px; padding:8px; margin-bottom:10px;"><strong>📅 День ${d.day} (код ${d.code})</strong><br>${forecastDayDecodes[d.code] || ""}</div>`;
+    let monthsHtml = '';
+    let allDaysHtml = '';
+    
+    for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
+        const monthNum = monthIndex + 1;
+        const monthName = months[monthIndex];
+        const monthData = monthly[monthIndex];
+        const monthCode = monthData.display;
+        const monthDesc = forecastMonthDecodes[monthCode] || "Расшифровка отсутствует";
+        
+        const daily = getDailyCodes(forecastBase, year, monthNum, forecastTyp);
+        const daysInMonthCount = new Date(year, monthNum, 0).getDate();
+        
+        let daysHtml = '';
+        for (let day = 1; day <= daysInMonthCount; day++) {
+            const d = daily[day-1];
+            const dayCode = d.code;
+            const dayDesc = forecastDayDecodes[dayCode] || "Расшифровка отсутствует";
+            daysHtml += `
+                <div style="border:1px solid #e0e0e0; border-radius:8px; padding:10px; margin-bottom:8px; background:#fafafa;">
+                    <strong style="font-size:14px; color:#2C2C2C;">📅 День ${day} (код ${dayCode})</strong>
+                    <div style="font-size:13px; line-height:1.4; margin-top:5px; color:#333;">${dayDesc}</div>
+                </div>
+            `;
+        }
+        
+        monthsHtml += `
+            <tr style="border:1px solid #ddd;">
+                <td style="border:1px solid #ddd; padding:12px; vertical-align:top; width:100px;"><strong>${monthName}</strong></td>
+                <td style="border:1px solid #ddd; padding:12px; vertical-align:top; width:100px;"><strong>${monthCode}</strong></td>
+                <td style="border:1px solid #ddd; padding:12px; vertical-align:top;">${monthDesc}</td>
+            </tr>
+        `;
+        
+        allDaysHtml += `
+            <div style="margin-top:30px; margin-bottom:30px; page-break-inside: avoid;">
+                <h3 style="font-size:20px; color:#2C2C2C; border-bottom:2px solid #F0EAE3; padding-bottom:8px; margin-bottom:15px;">
+                    📅 ${monthName} ${year} года (${daysInMonthCount} дней)
+                </h3>
+                <div style="display:grid; gap:10px;">
+                    ${daysHtml}
+                </div>
+            </div>
+        `;
     }
     
-    const pdfHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Личный прогноз на ${year} год</title><style>body{font-family:'Inter',sans-serif;padding:40px;line-height:1.5;}h1{font-size:28px;border-bottom:2px solid #F0EAE3;padding-bottom:15px;}h2{font-size:20px;margin:25px 0 15px;}table{width:100%;border-collapse:collapse;margin:15px 0;}th,td{border:1px solid #ddd;padding:10px;text-align:left;}th{background:#F3EDE6;}.days-grid{display:grid;gap:12px;margin-top:15px;}.footer{margin-top:40px;text-align:center;font-size:12px;color:#B0A396;border-top:1px solid #EFE9E2;padding-top:20px;}@media print{body{padding:20px;}}</style></head><body><h1>🔮 Личный прогноз на ${year} год</h1><h2>📅 Код года: ${yearCode}</h2><div>${yearDesc}</div><h2>📆 Прогноз по месяцам</h2><table><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthsHtml}</tbody></table><h2>📅 Прогноз по дням (месяц ${currentMonth})</h2><div class="days-grid">${daysHtml}</div><div class="footer"><p>© Переберина Ольга | ИНН 780440939257</p><p>Расшифровка сгенерирована автоматически</p><p>Дата: ${new Date().toLocaleDateString('ru-RU')}</p></div><script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);};<\/script></body></html>`;
+    const pdfHtml = `<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Личный прогноз на ${year} год</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Inter', 'Segoe UI', sans-serif; background: white; padding: 40px; line-height: 1.5; color: #1E1E1E; }
+            .container { max-width: 1000px; margin: 0 auto; }
+            h1 { font-size: 32px; margin-bottom: 10px; color: #2C2C2C; border-bottom: 3px solid #F0EAE3; padding-bottom: 15px; }
+            h2 { font-size: 24px; margin: 30px 0 15px 0; color: #2C2C2C; border-left: 4px solid #2C2C2C; padding-left: 15px; }
+            h3 { font-size: 20px; margin: 20px 0 12px 0; color: #2C2C2C; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
+            th { background: #F3EDE6; font-weight: 600; }
+            .year-block { background: #FAF8F5; padding: 20px; border-radius: 16px; margin: 20px 0; border: 1px solid #EFE9E2; }
+            .year-code { font-size: 18px; font-weight: 600; color: #2C2C2C; margin-bottom: 10px; }
+            .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #B0A396; border-top: 1px solid #EFE9E2; padding-top: 20px; }
+            .page-break { page-break-before: always; }
+            @media print { body { padding: 20px; } .page-break { page-break-before: always; } }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1>🔮 Личный прогноз на ${year} год</h1>
+                <p style="color: #7A6E62; margin-top: 8px;">Переберина Ольга — нумеролог-чакролог</p>
+                <p style="color: #B0A396; font-size: 12px; margin-top: 5px;">Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
+            </div>
+            
+            <div class="year-block">
+                <div class="year-code">📅 Код года: ${yearCode}</div>
+                <div style="font-size: 15px; line-height: 1.6;">${yearDesc}</div>
+            </div>
+            
+            <h2>📆 Прогноз по месяцам</h2>
+            <table>
+                <thead>
+                    <tr style="background:#F3EDE6;">
+                        <th style="width:120px;">Месяц</th>
+                        <th style="width:100px;">Код</th>
+                        <th>Расшифровка</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${monthsHtml}
+                </tbody>
+            追赶
+            
+            <div class="page-break"></div>
+            <h2>📅 Прогноз по дням (подробно)</h2>
+            ${allDaysHtml}
+            
+            <div class="footer">
+                <p>© Переберина Ольга | ИНН 780440939257</p>
+                <p>Расшифровка сгенерирована автоматически на основе нумерологических расчетов</p>
+                <p>По всем вопросам: ai_numerolog@mail.ru | t.me/psyofchakras</p>
+            </div>
+        </div>
+        <script>
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                }, 300);
+            };
+        <\/script>
+    </body>
+    </html>`;
     
     const printWindow = window.open('', '_blank');
     printWindow.document.write(pdfHtml);
@@ -1041,7 +1145,7 @@ function renderForecast(year, month=1) {
     
     let yearFullDesc = `<div class="full-text" style="margin-top:16px;">${forecastPaid ? (forecastYearDecodes[forecastYearly.find(c=>c.year===year)?.display] || "🔓") : "🔒 Полная расшифровка года откроется после оплаты"}</div>`;
     let monthSelect = `<select id="forecastMonthSelect" style="margin:16px 0; padding:8px;"><option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option><option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option><option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option><option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option></select>`;
-    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<td>${m.month}<td>${m.display}<td>${forecastPaid ? (forecastMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
+    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${forecastPaid ? (forecastMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
     let pdfButton = forecastPaid ? `<div style="text-align:center; margin:20px 0;"><button id="forecastPdfBtn" class="pay-btn" style="background:#4CAF50;">📥 Скачать прогноз в PDF</button></div>` : '';
     
     document.getElementById('forecastResults').innerHTML = `<div class="results-area"><h3>📅 Код года</h3>${yearsHtml}${yearFullDesc}</div><div class="results-area"><h3>📆 Месяцы ${year} года</h3>${monthsHtml}${monthSelect}<h3>📅 Коды на каждый день (месяц ${month})</h3>${dailyGrid}${pdfButton}</div>`;
