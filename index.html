@@ -179,7 +179,33 @@
         localStorage.setItem('compatPaid', 'true');
         localStorage.setItem('forecastPaid', 'true');
         
-        if (!tab || tab === 'main') {
+        // ВАЖНО: сначала переключаем вкладку, потом показываем содержимое
+        if (tab === 'forecast') {
+            // СНАЧАЛА ОТКРЫВАЕМ ВКЛАДКУ ПРОГНОЗА
+            document.querySelector('[data-tab="tab4"]').click();
+            
+            const savedBirth = localStorage.getItem('forecastBirth');
+            const savedYear = localStorage.getItem('forecastYear');
+            
+            if (savedBirth && savedYear) {
+                document.getElementById('birthForecast').value = savedBirth;
+                // Даём время на открытие вкладки
+                setTimeout(function() {
+                    forecastPaid = true;
+                    forecastPaidYear = parseInt(savedYear);
+                    document.getElementById('calcForecastBtn').click();
+                    // Ещё немного времени на расчёт
+                    setTimeout(function() {
+                        renderForecast(forecastPaidYear);
+                    }, 500);
+                }, 300);
+            } else if (savedBirth) {
+                document.getElementById('birthForecast').value = savedBirth;
+                setTimeout(function() {
+                    document.getElementById('calcForecastBtn').click();
+                }, 300);
+            }
+        } else if (!tab || tab === 'main') {
             document.querySelector('[data-tab="tab1"]').click();
             const savedBirth = localStorage.getItem('mainBirth');
             if (savedBirth) {
@@ -202,22 +228,6 @@
                 document.getElementById('birthMale').value = savedMale;
                 document.getElementById('birthFemale').value = savedFemale;
                 document.getElementById('calcCompatBtn').click();
-            }
-        } else if (tab === 'forecast') {
-            document.querySelector('[data-tab="tab4"]').click();
-            const savedBirth = localStorage.getItem('forecastBirth');
-            const savedYear = localStorage.getItem('forecastYear');
-            if (savedBirth && savedYear) {
-                document.getElementById('birthForecast').value = savedBirth;
-                forecastPaid = true;
-                forecastPaidYear = parseInt(savedYear);
-                document.getElementById('calcForecastBtn').click();
-                setTimeout(() => {
-                    renderForecast(forecastPaidYear);
-                }, 500);
-            } else if (savedBirth) {
-                document.getElementById('birthForecast').value = savedBirth;
-                document.getElementById('calcForecastBtn').click();
             }
         }
         
@@ -1155,6 +1165,26 @@ document.getElementById('forecastPayBtn').onclick = () => {
     if(!year){ alert("Выберите год"); return; }
     showPaymentModal("Расшифровка личного прогноза (год+месяцы+дни)", 1490, "forecast", { birth, year: year });
 };
+
+// ПРИНУДИТЕЛЬНАЯ ПРИВЯЗКА КНОПКИ PDF
+function initForecastPdfButton() {
+    setTimeout(function() {
+        var pdfBtn = document.getElementById('forecastPdfBtn');
+        if (pdfBtn) {
+            pdfBtn.onclick = generateForecastPDF;
+            console.log("✅ Кнопка PDF привязана");
+        } else {
+            initForecastPdfButton();
+        }
+    }, 500);
+}
+
+var originalRender = renderForecast;
+renderForecast = function(year, month) {
+    originalRender(year, month);
+    initForecastPdfButton();
+};
+initForecastPdfButton();
 // ============================================================================
 // 27. КАРТА ДНЯ
 // ============================================================================
