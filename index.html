@@ -159,9 +159,6 @@
 
 <script>
 // ============================================================================
-// // ============================================================================
-// ============================================================================
-// ============================================================================
 // АВТОМАТИЧЕСКОЕ ОТКРЫТИЕ ПОСЛЕ ОПЛАТЫ
 // ============================================================================
 (function autoOpenAfterPayment() {
@@ -181,15 +178,6 @@
         localStorage.setItem('pregPaid', 'true');
         localStorage.setItem('compatPaid', 'true');
         localStorage.setItem('forecastPaid', 'true');
-        
-        // ВАЖНО: устанавливаем флаг для прогноза
-        if (tab === 'forecast') {
-            const savedYear = localStorage.getItem('forecastYear');
-            if (savedYear) {
-                forecastPaidYear = parseInt(savedYear);
-            }
-            forecastPaid = true;
-        }
         
         if (!tab || tab === 'main') {
             document.querySelector('[data-tab="tab1"]').click();
@@ -222,7 +210,6 @@
             if (savedBirth) {
                 document.getElementById('birthForecast').value = savedBirth;
                 document.getElementById('calcForecastBtn').click();
-                // Даём время на расчёт и обновляем
                 setTimeout(() => {
                     if (savedYear) {
                         forecastPaidYear = parseInt(savedYear);
@@ -982,7 +969,6 @@ document.getElementById('compatPayBtn').onclick = () => {
 document.getElementById('downloadCompatPdf').onclick = () => { html2pdf().from(document.getElementById('compatResults')).save(); };
 
 // ============================================================================
-// ============================================================================
 // 26. ЛИЧНЫЙ ПРОГНОЗ
 // ============================================================================
 let forecastPaid = false, forecastYearly = [], forecastBase = "", forecastTyp = 0, forecastStartYear = 0, forecastCurrentYear = 0;
@@ -1052,7 +1038,7 @@ function generateForecastPDF() {
             <p>Переберина Ольга — нумеролог-чакролог | ${new Date().toLocaleDateString('ru-RU')}</p>
             <div style="background:#f5f5f5; padding:15px; margin:20px 0;"><strong>📅 Код года: ${yearCode}</strong><br>${yearDesc}</div>
             <h2>📆 Прогноз по месяцам</h2>
-            <table style="width:100%; border-collapse:collapse;">${monthsHtml}追赶
+            <table style="width:100%; border-collapse:collapse;">${monthsHtml}</table>
             <div style="page-break-before:always;"></div>
             <h2>📅 Прогноз по дням</h2>
             ${allDaysHtml}
