@@ -1209,6 +1209,7 @@ document.getElementById('pregPayBtn').onclick = () => {
 // 25. КАЛЬКУЛЯТОР СОВМЕСТИМОСТИ
 // ============================================================================
 let compatPaid = false;
+let compatPaidKey = null; // Храним уникальный ключ оплаченной пары
 
 function getCompatibilityStatus(chakraName, maleVal, femaleVal) {
     const normalRules = {
@@ -1226,9 +1227,74 @@ function getCompatibilityStatus(chakraName, maleVal, femaleVal) {
     return { type: "imbalance" };
 }
 
+function generateCompatPDF() {
+    const element = document.getElementById('compatResults');
+    if (!element || element.innerHTML.includes('👉 Введите даты')) {
+        alert("Сначала рассчитайте совместимость!");
+        return;
+    }
+    
+    const html = `<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Совместимость пары</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Inter', sans-serif; background: white; padding: 40px; line-height: 1.5; }
+            .container { max-width: 800px; margin: 0 auto; }
+            h1 { font-size: 28px; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+            .result-block { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #ddd; }
+            .result-block strong { font-size: 18px; display: block; margin-bottom: 10px; }
+            .full-text { background: #f5f5f5; padding: 15px; border-radius: 10px; margin-top: 10px; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }
+            th { background: #f0f0f0; }
+            .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>💞 Совместимость пары</h1>
+            <p>Переберина Ольга — нумеролог-чакролог</p>
+            <p>Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
+            <div style="margin-top:20px;">
+                ${element.innerHTML}
+            </div>
+            <div class="footer">
+                <p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p>
+            </div>
+        </div>
+        <script>
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 1000);
+                }, 500);
+            };
+        <\/script>
+    </body>
+    </html>`;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(html);
+    printWindow.document.close();
+}
+
 function renderCompat() {
     let mv = document.getElementById('birthMale').value, fv = document.getElementById('birthFemale').value;
     if(!mv||!fv){ alert("Введите даты"); return; }
+    
+    // Генерируем уникальный ключ для этой пары
+    const pairKey = mv + "_" + fv;
+    
+    // ПРОВЕРКА: если оплачена конкретная пара, блокируем другие
+    if (compatPaid && compatPaidKey !== null && compatPaidKey !== pairKey) {
+        alert(`❌ У вас открыта расшифровка только для пары, которую вы оплатили.\n\nВведите те же даты, что и при оплате.`);
+        return;
+    }
+    
     let m = new Date(mv), f = new Date(fv);
     let mNum = getLifePathNum(m), fNum = getLifePathNum(f);
     let mCh = calculateChakras(m), fCh = calculateChakras(f);
@@ -1236,8 +1302,10 @@ function renderCompat() {
     let rows = "";
     let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
     
-    // ПРОВЕРКА: показываем полную версию ТОЛЬКО если оплачена совместимость
-    const isCompatPaid = localStorage.getItem('compatPaid') === 'true' || compatPaid === true;
+    // Проверяем оплату
+    const savedCompatPaid = localStorage.getItem('compatPaid');
+    const savedCompatKey = localStorage.getItem('compatPaidKey');
+    const isCompatPaid = (savedCompatPaid === 'true' && savedCompatKey === pairKey) || compatPaid === true;
     
     for(let i=0;i<6;i++){
         let vm=mCh[i], vf=fCh[i];
@@ -1250,18 +1318,25 @@ function renderCompat() {
             case "critical": statusText = "Критическая нехватка"; break;
         }
         let fullText = isCompatPaid ? (chakraCompatibilityTexts[chakraNames[i]][status.type] || "") : "";
-        rows += `<tr><td class="code-pair">${chakraNames[i]}</td><td class="code-pair">${vm}%</td><td class="code-pair">${vf}%</td><td class="code-pair">${statusText}${fullText ? `<br><small>${fullText}</small>` : ""}<tr></tr>`;
+        rows += `<tr><td style="border:1px solid #ddd; padding:8px;">${chakraNames[i]}</td><td style="border:1px solid #ddd; padding:8px;">${vm}%</td><td style="border:1px solid #ddd; padding:8px;">${vf}%</td><td style="border:1px solid #ddd; padding:8px;">${statusText}${fullText ? `<br><small>${fullText}</small>` : ""}</td></tr>`;
     }
-    let pairKey = mNum+"+"+fNum;
-    let compatTypesText = isCompatPaid ? (compatibilityTypesFull[pairKey] || "🔓") : "🔒 Оплатите";
+    let typeKey = mNum+"+"+fNum;
+    let compatTypesText = isCompatPaid ? (compatibilityTypesFull[typeKey] || "🔓") : "🔒 Оплатите";
     let html = `<div class="result-block"><strong>🧬 Пара:</strong> Мужчина ${mNum} — ${["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][mNum]} + Женщина ${fNum} — ${["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][fNum]}</div>
         <div class="result-block"><strong>📖 Совместимость типологий:</strong> ${compatTypesText}</div>
         <div class="result-block"><strong>🎯 Задача пары:</strong> ${sum} — ${pairTaskShort[sum]}</div>
         <div class="result-block"><strong>⚔️ Испытание:</strong> ${diff} — ${pairTrialShort[diff]}</div>
-        <div class="result-block"><strong>🌀 Совместимость по чакрам</strong><table class="compat-table"><thead><tr><th>Чакра</th><th>Мужчина</th><th>Женщина</th><th>Совместимость</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        <div class="result-block"><strong>🌀 Совместимость по чакрам</strong>
+        <table style="width:100%; border-collapse:collapse; margin-top:12px;">
+            <thead><tr><th style="border:1px solid #ddd; padding:8px; background:#f0f0f0;">Чакра</th><th style="border:1px solid #ddd; padding:8px; background:#f0f0f0;">Мужчина</th><th style="border:1px solid #ddd; padding:8px; background:#f0f0f0;">Женщина</th><th style="border:1px solid #ddd; padding:8px; background:#f0f0f0;">Совместимость</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table></div>`;
     if(isCompatPaid) html += `<div class="full-text"><strong>⭐ Задача пары:</strong> ${pairTaskFull[sum]}<br><strong>⭐ Испытание:</strong> ${pairTrialFull[diff]}</div>`;
     document.getElementById('compatResults').innerHTML = html;
     document.getElementById('compatPdfBtn').style.display = isCompatPaid ? 'block' : 'none';
+    
+    const pdfBtn = document.getElementById('downloadCompatPdf');
+    if(pdfBtn) pdfBtn.onclick = generateCompatPDF;
 }
 
 document.getElementById('calcCompatBtn').onclick = renderCompat;
@@ -1270,7 +1345,6 @@ document.getElementById('compatPayBtn').onclick = () => {
     if(!mv||!fv){ alert("Сначала введите даты"); return; }
     showPaymentModal("Полная расшифровка совместимости", 490, "compat", { male: mv, female: fv });
 };
-document.getElementById('downloadCompatPdf').onclick = () => { html2pdf().from(document.getElementById('compatResults')).save(); };
 
 // ============================================================================
 // 26. ЛИЧНЫЙ ПРОГНОЗ
@@ -1560,7 +1634,7 @@ const paymentLinks = {
     "Гайд «Путеводитель по мужчинам»": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
     "Расшифровка нумерологического портрета": "https://payform.ru/q4bGXpI/",
     "Расшифровка прогноза беременности": "https://payform.ru/6kbJGlc/",
-    "Полная расшифровка совместимости": "ВСТАВЬТЕ_ВАШУ_ССЫЛКУ",
+    "Полная расшифровка совместимости": "https://payform.ru/hlbJJ2m/",
     "Расшифровка личного прогноза (год+месяцы+дни)": "https://payform.ru/6gbIusu/"
 };
 // ⬆⬆⬆ ВСТАВЬТЕ ВАШИ ССЫЛКИ ВЫШЕ ⬆⬆⬆
@@ -1570,7 +1644,7 @@ document.getElementById('modalPayBtn').onclick = () => {
         let birth = document.getElementById('modalBirth')?.value;
         if(!birth){ alert("Подтвердите дату рождения"); return; }
         localStorage.setItem('mainBirth', birth);
-        localStorage.setItem('mainPaidBirth', birth);  // ← СОХРАНЯЕМ ДАТУ ДЛЯ ПРОВЕРКИ
+        localStorage.setItem('mainPaidBirth', birth);
     } else if(currentPayment.type === 'preg'){
         let birth = document.getElementById('modalBirth')?.value;
         let year = document.getElementById('modalYear')?.value;
@@ -1583,6 +1657,9 @@ document.getElementById('modalPayBtn').onclick = () => {
         if(!male || !female){ alert("Подтвердите даты"); return; }
         localStorage.setItem('compatMale', male);
         localStorage.setItem('compatFemale', female);
+        // Сохраняем уникальный ключ пары для привязки оплаты
+        const pairKey = male + "_" + female;
+        localStorage.setItem('compatPaidKey', pairKey);
     } else if(currentPayment.type === 'forecast'){
         let birth = document.getElementById('modalBirth')?.value;
         let year = document.getElementById('modalYear')?.value;
