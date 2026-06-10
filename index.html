@@ -890,7 +890,6 @@ document.getElementById('calcMainBtn').onclick = () => {
     // РАСЧЁТ ПЕРИОДОВ ЖИЗНИ (ДИНАМИЧЕСКОЕ КОЛИЧЕСТВО)
     const prodStr = prod.toString();
     let periods = prodStr.slice(1).slice(0, 6).split('').map(c => parseInt(c) || 0);
-    // Убираем лишние нули в конце
     while (periods.length > 1 && periods[periods.length - 1] === 0) {
         periods.pop();
     }
@@ -926,12 +925,11 @@ document.getElementById('calcMainBtn').onclick = () => {
     currentMainData = { ch, pnum, rodFirst, pastFirst, presFirst, parentsFirst, periods, periodCount, dynamicAgesList, dt, rodDisplay, pastDisplay, presDisplay, parentsDisplay };
     
     let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
-    let chakraRows = chakraNames.map((n,i) => `<tr><td>${n}</td><td>${ch[i]}%</td><td class="code-pair">${getChakraStatus(ch[i])}</td></tr>`).join('');
-    let chakraTable = `<table class="chakra-table"><thead><tr><th>Название чакры</th><th>Емкость чакры</th><th>Значение</th></tr></thead><tbody>${chakraRows}</tbody></td>`;
+    let chakraRows = chakraNames.map((n,i) => `<tr><td>${n}</td><td>${ch[i]}%<tr><td class="code-pair">${getChakraStatus(ch[i])}</td></tr>`).join('');
+    let chakraTable = `<table class="chakra-table"><thead><tr><th>Название чакры</th><th>Емкость чакры</th><th>Значение</th></tr></thead><tbody>${chakraRows}</tbody></table>`;
     
     let psychotypeName = ["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][pnum];
     
-    // ПРОВЕРКА: показываем полную версию ТОЛЬКО если оплачена ЭТА дата рождения
     const savedPaidBirth = localStorage.getItem('mainPaidBirth');
     const isMainPaid = (savedPaidBirth === val) || (localStorage.getItem('mainPaid') === 'true' && mainPaid === true);
     
@@ -961,7 +959,6 @@ document.getElementById('calcMainBtn').onclick = () => {
             </div>`;
         document.getElementById('pdfButtons').style.display = 'none';
         
-        // Добавляем обработчик для кнопки внутри результатов
         const inlineBtn = document.getElementById('inlinePayBtn');
         if(inlineBtn) {
             inlineBtn.onclick = () => {
@@ -976,48 +973,68 @@ document.getElementById('mainPayBtn').onclick = () => {
     showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
 };
 
-// ИСПРАВЛЕННАЯ КНОПКА PDF (С ВРЕМЕННЫМ КОНТЕЙНЕРОМ)
-document.getElementById('pdfDownloadBtn').onclick = () => {
+// НОВАЯ ФУНКЦИЯ PDF ДЛЯ ПОРТРЕТА (аналогично беременности)
+function generateMainPDF() {
     const element = document.getElementById('mainResults');
     if (!element || element.innerHTML.includes('👉 Введите дату')) {
         alert("Сначала рассчитайте расшифровку!");
         return;
     }
     
-    // Создаём временный контейнер с копией содержимого
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.top = '-9999px';
-    tempDiv.style.width = '800px';
-    tempDiv.style.backgroundColor = 'white';
-    tempDiv.style.padding = '20px';
-    tempDiv.style.fontFamily = 'Inter, sans-serif';
-    tempDiv.innerHTML = `
-        <h1 style="font-size:24px;">🔮 Нумерологический портрет</h1>
-        <p>Переберина Ольга — нумеролог-чакролог</p>
-        <p>Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
-        <div style="margin-top:20px;">
-            ${element.innerHTML}
+    const html = `<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Нумерологический портрет</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: white; padding: 20px; line-height: 1.5; color: #1E1E1E; }
+            .container { max-width: 800px; margin: 0 auto; }
+            h1 { font-size: 24px; border-bottom: 2px solid #F0EAE3; padding-bottom: 10px; margin-bottom: 15px; }
+            .result-block { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #EFE9E2; }
+            .result-block strong { font-size: 16px; display: block; margin-bottom: 8px; }
+            .full-text { background: #FAF8F5; padding: 12px; border-radius: 12px; margin-top: 8px; font-size: 14px; }
+            .chakra-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            .chakra-table th, .chakra-table td { border: 1px solid #EFE9E2; padding: 8px; text-align: left; font-size: 13px; }
+            .chakra-table th { background: #F3EDE6; }
+            .periods-grid { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0; }
+            .period-card { background: #FAF8F5; padding: 12px; border-radius: 12px; flex: 1; min-width: 120px; text-align: center; }
+            .period-title { font-weight: 600; font-size: 14px; }
+            .period-age { font-size: 12px; color: #7A6E62; margin-top: 4px; }
+            .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #B0A396; border-top: 1px solid #EFE9E2; padding-top: 15px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🔮 Нумерологический портрет</h1>
+            <p>Переберина Ольга — нумеролог-чакролог</p>
+            <p>Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
+            <div style="margin-top: 20px;">
+                ${element.innerHTML}
+            </div>
+            <div class="footer">
+                <p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p>
+            </div>
         </div>
-        <div style="margin-top:40px; text-align:center; font-size:12px; color:#999; border-top:1px solid #ddd; padding-top:20px;">
-            <p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p>
-        </div>
-    `;
-    document.body.appendChild(tempDiv);
+        <script>
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 1000);
+                }, 500);
+            };
+        <\/script>
+    </body>
+    </html>`;
     
-    const opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
-        filename: 'numerology_report.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, letterRendering: true },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    
-    html2pdf().set(opt).from(tempDiv).save().then(() => {
-        document.body.removeChild(tempDiv);
-    });
-};
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(html);
+    printWindow.document.close();
+}
+
+// НАЗНАЧАЕМ НОВЫЙ ОБРАБОТЧИК PDF
+document.getElementById('pdfDownloadBtn').onclick = generateMainPDF;
 // ============================================================================
 // 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
 // ============================================================================
