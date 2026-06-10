@@ -984,54 +984,63 @@ document.getElementById('mainPayBtn').onclick = () => {
     showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
 };
 
-// ФУНКЦИЯ PDF ДЛЯ ПОРТРЕТА
-function generateMainPDF() {
+// ИСПРАВЛЕННАЯ ФУНКЦИЯ PDF ДЛЯ ПОРТРЕТА (РАБОТАЕТ КАК В БЕРЕМЕННОСТИ)
+document.getElementById('pdfDownloadBtn').onclick = () => {
     const element = document.getElementById('mainResults');
     if (!element || element.innerHTML.includes('👉 Введите дату')) {
         alert("Сначала рассчитайте расшифровку!");
         return;
     }
     
-    const html = `<!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Нумерологический портрет</title>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Inter', sans-serif; background: white; padding: 20px; line-height: 1.5; }
-            .container { max-width: 800px; margin: 0 auto; }
-            h1 { font-size: 24px; border-bottom: 2px solid #F0EAE3; padding-bottom: 10px; }
-            .result-block { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #EFE9E2; }
-            .result-block strong { font-size: 16px; display: block; margin-bottom: 8px; }
-            .full-text { background: #FAF8F5; padding: 12px; border-radius: 12px; margin-top: 8px; }
-            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background: #f0f0f0; }
-            .periods-grid { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0; }
-            .period-card { background: #FAF8F5; padding: 12px; border-radius: 12px; text-align: center; }
-            .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 15px; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🔮 Нумерологический портрет</h1>
-            <p>Переберина Ольга — нумеролог-чакролог</p>
-            <p>Дата: ${new Date().toLocaleDateString('ru-RU')}</p>
-            <div style="margin-top: 20px;">${element.innerHTML}</div>
-            <div class="footer"><p>© Переберина Ольга | ai_numerolog@mail.ru</p></div>
-        </div>
-        <script>window.onload = function() { setTimeout(function() { window.print(); setTimeout(function() { window.close(); }, 1000); }, 500); };<\/script>
-    </body>
-    </html>`;
-    
+    // Просто копируем содержимое в новое окно и открываем печать
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(html);
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Нумерологический портрет</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Inter', sans-serif; background: white; padding: 40px; line-height: 1.5; }
+                .container { max-width: 800px; margin: 0 auto; }
+                h1 { font-size: 28px; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                .result-block { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #ddd; }
+                .result-block strong { font-size: 18px; display: block; margin-bottom: 10px; }
+                .full-text { background: #f5f5f5; padding: 15px; border-radius: 10px; margin-top: 10px; }
+                table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                th { background: #f0f0f0; }
+                .periods-grid { display: flex; flex-wrap: wrap; gap: 15px; margin: 15px 0; }
+                .period-card { background: #f9f9f9; padding: 15px; border-radius: 10px; text-align: center; flex: 1; min-width: 100px; }
+                .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🔮 Нумерологический портрет</h1>
+                <p>Переберина Ольга — нумеролог-чакролог</p>
+                <p>Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
+                <div style="margin-top:20px;">
+                    ${element.innerHTML}
+                </div>
+                <div class="footer">
+                    <p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p>
+                </div>
+            </div>
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 1000);
+                    }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
     printWindow.document.close();
-}
-
-document.getElementById('pdfDownloadBtn').onclick = generateMainPDF;
+};
 // ============================================================================
 // 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
 // ============================================================================
