@@ -911,7 +911,6 @@ document.getElementById('calcMainBtn').onclick = () => {
     for (let i = 0; i < periodCount; i++) {
         const start = i * periodLength;
         const end = (i === periodCount - 1) ? `после ${start}` : `${start + periodLength}`;
-        // ИСПРАВЛЕНО: для последнего периода не добавляем start
         if (i === periodCount - 1) {
             dynamicAgesList.push(`${end} лет`);
         } else {
@@ -928,7 +927,7 @@ document.getElementById('calcMainBtn').onclick = () => {
     
     let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
     let chakraRows = chakraNames.map((n,i) => `<tr><td>${n}</td><td>${ch[i]}%</td><td class="code-pair">${getChakraStatus(ch[i])}</td></tr>`).join('');
-    let chakraTable = `<table class="chakra-table"><thead><tr><th>Название чакры</th><th>Емкость чакры</th><th>Значение</th></tr></thead><tbody>${chakraRows}</tbody></table>`;
+    let chakraTable = `<table class="chakra-table"><thead><tr><th>Название чакры</th><th>Емкость чакры</th><th>Значение</th></tr></thead><tbody>${chakraRows}</tbody></td>`;
     
     let psychotypeName = ["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][pnum];
     
@@ -977,13 +976,36 @@ document.getElementById('mainPayBtn').onclick = () => {
     showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
 };
 
-// ИСПРАВЛЕННАЯ КНОПКА PDF
+// ИСПРАВЛЕННАЯ КНОПКА PDF (С ВРЕМЕННЫМ КОНТЕЙНЕРОМ)
 document.getElementById('pdfDownloadBtn').onclick = () => {
     const element = document.getElementById('mainResults');
     if (!element || element.innerHTML.includes('👉 Введите дату')) {
         alert("Сначала рассчитайте расшифровку!");
         return;
     }
+    
+    // Создаём временный контейнер с копией содержимого
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '-9999px';
+    tempDiv.style.width = '800px';
+    tempDiv.style.backgroundColor = 'white';
+    tempDiv.style.padding = '20px';
+    tempDiv.style.fontFamily = 'Inter, sans-serif';
+    tempDiv.innerHTML = `
+        <h1 style="font-size:24px;">🔮 Нумерологический портрет</h1>
+        <p>Переберина Ольга — нумеролог-чакролог</p>
+        <p>Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
+        <div style="margin-top:20px;">
+            ${element.innerHTML}
+        </div>
+        <div style="margin-top:40px; text-align:center; font-size:12px; color:#999; border-top:1px solid #ddd; padding-top:20px;">
+            <p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p>
+        </div>
+    `;
+    document.body.appendChild(tempDiv);
+    
     const opt = {
         margin: [0.5, 0.5, 0.5, 0.5],
         filename: 'numerology_report.pdf',
@@ -991,7 +1013,10 @@ document.getElementById('pdfDownloadBtn').onclick = () => {
         html2canvas: { scale: 2, letterRendering: true },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(element).save();
+    
+    html2pdf().set(opt).from(tempDiv).save().then(() => {
+        document.body.removeChild(tempDiv);
+    });
 };
 // ============================================================================
 // 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
