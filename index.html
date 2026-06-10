@@ -190,7 +190,6 @@
             const savedYear = localStorage.getItem('forecastYear');
             if (savedYear) {
                 localStorage.setItem('forecastPaidYear', savedYear);
-                forecastPaidYear = parseInt(savedYear);
             }
         } else if (tab === 'preg') {
             targetTab = 'tab2';
@@ -200,69 +199,95 @@
             serviceName = 'расшифровку совместимости';
         }
         
+        // ОТКРЫВАЕМ ВКЛАДКУ
         openTab(targetTab);
         
+        // ПОКАЗЫВАЕМ СООБЩЕНИЕ
         setTimeout(() => {
             alert(`✅ Оплата прошла успешно!\n\nВаша ${serviceName} теперь открыта.`);
         }, 500);
         
+        // ДЛЯ ПРОГНОЗА: подставляем дату и запускаем расчёт ПОСЛЕ ОТКРЫТИЯ ВКЛАДКИ
         if (tab === 'forecast') {
             const savedBirth = localStorage.getItem('forecastBirth');
             const savedYear = localStorage.getItem('forecastYear');
-            if (savedBirth) {
-                document.getElementById('birthForecast').value = savedBirth;
-            }
-            if (savedYear) {
-                forecastPaid = true;
-                forecastPaidYear = parseInt(savedYear);
-            }
-            setTimeout(() => {
-                const calcBtn = document.getElementById('calcForecastBtn');
-                if (calcBtn) {
-                    calcBtn.style.animation = 'pulse 1s ease-in-out 3';
-                    calcBtn.style.boxShadow = '0 0 0 3px #4CAF50';
-                    setTimeout(() => {
-                        calcBtn.style.animation = '';
-                        calcBtn.style.boxShadow = '';
-                    }, 3000);
+            
+            // Используем MutationObserver чтобы дождаться открытия вкладки
+            const observer = new MutationObserver(function(mutations) {
+                const tab4 = document.getElementById('tab4');
+                if (tab4 && tab4.classList.contains('active-panel')) {
+                    observer.disconnect();
+                    
+                    if (savedBirth) {
+                        document.getElementById('birthForecast').value = savedBirth;
+                    }
+                    if (savedYear) {
+                        forecastPaid = true;
+                        forecastPaidYear = parseInt(savedYear);
+                    }
+                    
+                    const calcBtn = document.getElementById('calcForecastBtn');
+                    if (calcBtn) {
+                        calcBtn.click();
+                        setTimeout(() => {
+                            if (forecastPaidYear) {
+                                renderForecast(forecastPaidYear);
+                            }
+                        }, 500);
+                    }
                 }
-            }, 300);
+            });
+            
+            observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+            
+            // Запасной таймаут на всякий случай
+            setTimeout(() => {
+                observer.disconnect();
+                if (savedBirth) {
+                    document.getElementById('birthForecast').value = savedBirth;
+                }
+                if (savedYear) {
+                    forecastPaid = true;
+                    forecastPaidYear = parseInt(savedYear);
+                }
+                const calcBtn = document.getElementById('calcForecastBtn');
+                if (calcBtn) calcBtn.click();
+            }, 2000);
         } else if (tab === 'preg') {
             const savedBirth = localStorage.getItem('pregBirth');
-            if (savedBirth) {
-                document.getElementById('birthPreg').value = savedBirth;
-                setTimeout(() => {
+            setTimeout(() => {
+                if (savedBirth) {
+                    document.getElementById('birthPreg').value = savedBirth;
                     document.getElementById('calcPregBtn').click();
-                }, 300);
-            }
+                }
+            }, 500);
         } else if (tab === 'compat') {
             const savedMale = localStorage.getItem('compatMale');
             const savedFemale = localStorage.getItem('compatFemale');
-            if (savedMale && savedFemale) {
-                document.getElementById('birthMale').value = savedMale;
-                document.getElementById('birthFemale').value = savedFemale;
-                setTimeout(() => {
+            setTimeout(() => {
+                if (savedMale && savedFemale) {
+                    document.getElementById('birthMale').value = savedMale;
+                    document.getElementById('birthFemale').value = savedFemale;
                     document.getElementById('calcCompatBtn').click();
-                }, 300);
-            }
+                }
+            }, 500);
         } else {
             const savedBirth = localStorage.getItem('mainBirth');
-            if (savedBirth) {
-                document.getElementById('birthMain').value = savedBirth;
-                setTimeout(() => {
+            setTimeout(() => {
+                if (savedBirth) {
+                    document.getElementById('birthMain').value = savedBirth;
                     document.getElementById('calcMainBtn').click();
-                }, 300);
-            }
+                }
+            }, 500);
         }
         
         setTimeout(() => {
             window.history.replaceState({}, document.title, window.location.pathname);
-        }, 100);
+        }, 2000);
     } else {
         openTab('tab1');
     }
 })();
-
 // ============================================================================
 // 1. ПСИХОТИПЫ (1–9) - КАЖДЫЙ С НОВОЙ СТРОКИ
 // ============================================================================
