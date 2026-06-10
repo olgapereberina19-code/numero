@@ -166,22 +166,16 @@
     const paid = urlParams.get('paid');
     const tab = urlParams.get('tab');
     
-    // ФУНКЦИЯ ОТКРЫТИЯ ВКЛАДКИ
     function openTab(tabId) {
-        // Скрываем все панели
         document.querySelectorAll('.calculator-panel').forEach(p => p.classList.remove('active-panel'));
-        // Убираем активный класс со всех кнопок
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        // Показываем нужную панель
         const targetPanel = document.getElementById(tabId);
         if (targetPanel) targetPanel.classList.add('active-panel');
-        // Активируем кнопку
         const targetBtn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
         if (targetBtn) targetBtn.classList.add('active');
     }
     
     if (paid === '1') {
-        // Сохраняем флаги оплаты
         localStorage.setItem('mainPaid', 'true');
         localStorage.setItem('pregPaid', 'true');
         localStorage.setItem('compatPaid', 'true');
@@ -205,53 +199,65 @@
             serviceName = 'расшифровку совместимости';
         }
         
-        // ОТКРЫВАЕМ НУЖНУЮ ВКЛАДКУ
         openTab(targetTab);
         
-        // Показываем сообщение
         setTimeout(() => {
-            alert(`✅ Оплата прошла успешно!\n\nВаша ${serviceName} теперь открыта.\n\nВведите дату рождения и нажмите "Рассчитать".`);
+            alert(`✅ Оплата прошла успешно!\n\nВаша ${serviceName} теперь открыта.`);
         }, 500);
         
-        // Для прогноза подставляем сохранённую дату
+        // АВТОМАТИЧЕСКАЯ ПОДСТАНОВКА ДАННЫХ И РАСЧЁТ ДЛЯ ПРОГНОЗА
         if (tab === 'forecast') {
             const savedBirth = localStorage.getItem('forecastBirth');
+            const savedYear = localStorage.getItem('forecastYear');
             if (savedBirth) {
-                setTimeout(() => {
-                    document.getElementById('birthForecast').value = savedBirth;
-                }, 300);
+                document.getElementById('birthForecast').value = savedBirth;
             }
+            if (savedYear) {
+                forecastPaid = true;
+                forecastPaidYear = parseInt(savedYear);
+            }
+            // Запускаем расчёт автоматически
+            setTimeout(() => {
+                document.getElementById('calcForecastBtn').click();
+                // Перерисовываем с оплаченным годом
+                setTimeout(() => {
+                    if (forecastPaidYear) {
+                        renderForecast(forecastPaidYear);
+                    }
+                }, 500);
+            }, 300);
         } else if (tab === 'preg') {
             const savedBirth = localStorage.getItem('pregBirth');
             if (savedBirth) {
+                document.getElementById('birthPreg').value = savedBirth;
                 setTimeout(() => {
-                    document.getElementById('birthPreg').value = savedBirth;
+                    document.getElementById('calcPregBtn').click();
                 }, 300);
             }
         } else if (tab === 'compat') {
             const savedMale = localStorage.getItem('compatMale');
             const savedFemale = localStorage.getItem('compatFemale');
             if (savedMale && savedFemale) {
+                document.getElementById('birthMale').value = savedMale;
+                document.getElementById('birthFemale').value = savedFemale;
                 setTimeout(() => {
-                    document.getElementById('birthMale').value = savedMale;
-                    document.getElementById('birthFemale').value = savedFemale;
+                    document.getElementById('calcCompatBtn').click();
                 }, 300);
             }
         } else {
             const savedBirth = localStorage.getItem('mainBirth');
             if (savedBirth) {
+                document.getElementById('birthMain').value = savedBirth;
                 setTimeout(() => {
-                    document.getElementById('birthMain').value = savedBirth;
+                    document.getElementById('calcMainBtn').click();
                 }, 300);
             }
         }
         
-        // Очищаем URL
         setTimeout(() => {
             window.history.replaceState({}, document.title, window.location.pathname);
         }, 100);
     } else {
-        // ЕСЛИ НЕТ ПАРАМЕТРА ОПЛАТЫ - ОТКРЫВАЕМ ПОРТРЕТ
         openTab('tab1');
     }
 })();
