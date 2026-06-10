@@ -910,9 +910,13 @@ document.getElementById('calcMainBtn').onclick = () => {
     const dynamicAgesList = [];
     for (let i = 0; i < periodCount; i++) {
         const start = i * periodLength;
-        // ИСПРАВЛЕНО: последний период — "после X лет" вместо "X-Y"
         const end = (i === periodCount - 1) ? `после ${start}` : `${start + periodLength}`;
-        dynamicAgesList.push(`${start}-${end} лет`);
+        // ИСПРАВЛЕНО: для последнего периода не добавляем start
+        if (i === periodCount - 1) {
+            dynamicAgesList.push(`${end} лет`);
+        } else {
+            dynamicAgesList.push(`${start}-${end} лет`);
+        }
     }
     let periodsHtml = `<div class="periods-grid">`;
     for (let i = 0; i < periodCount; i++) {
