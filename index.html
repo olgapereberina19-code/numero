@@ -184,8 +184,13 @@
                 localStorage.setItem('forecastPaidYear', savedYear);
             }
             // НЕ УСТАНАВЛИВАЕМ ДРУГИЕ ФЛАГИ
-        } else if (tab === 'preg') {
-            localStorage.setItem('pregPaid', 'true');
+       } else if (tab === 'preg') {
+    localStorage.setItem('pregPaid', 'true');
+    const savedYear = localStorage.getItem('pregYear');
+    if (savedYear) {
+        localStorage.setItem('pregPaidYear', savedYear);
+    }
+}
         } else if (tab === 'compat') {
             localStorage.setItem('compatPaid', 'true');
         } else {
@@ -943,29 +948,128 @@ document.getElementById('mainPayBtn').onclick = () => {
 // 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
 // ============================================================================
 let pregPaid = false, pregYearly = [], pregTyp = 0, pregBase = "", pregCurrentYear = 2025;
+let pregPaidYear = null;
 
 function getMonthlyCodes(baseNum, year, typ) {
     let prod = BigInt(baseNum) * BigInt(year);
     let digits = prod.toString().split('').map(ch => parseInt(ch));
-    let months = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+    let months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
     return months.map((m,i) => { let first = digits[i%digits.length]; let second = first + typ; while(second>9) second = Math.floor(second/10)+(second%10); return { month:m, display:first+'/'+second }; });
 }
 
+function generatePregnancyPDF() {
+    if (!pregPaid || !pregCurrentYear) {
+        alert("Сначала оплатите расшифровку нужного года!");
+        return;
+    }
+    
+    const year = pregCurrentYear;
+    const yearCode = pregYearly.find(c => c.year === year)?.display || "";
+    const yearDesc = pregnancyYearDecodes[yearCode] || "Расшифровка отсутствует";
+    const monthly = getMonthlyCodes(pregBase, year, pregTyp);
+    
+    let html = `<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Прогноз беременности на ${year} год</title>
+        <style>
+            body { font-family: 'Inter', sans-serif; padding: 40px; line-height: 1.5; }
+            h1 { font-size: 28px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+            h2 { font-size: 22px; margin-top: 30px; color: #2C2C2C; }
+            .year-block { background: #f5f5f5; padding: 15px; border-radius: 10px; margin: 20px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+            th { background: #f0f0f0; }
+            .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <h1>🤰 Прогноз беременности на ${year} год</h1>
+        <p>Переберина Ольга — нумеролог-чакролог</p>
+        <p>Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
+        
+        <div class="year-block">
+            <strong>📅 Код года: ${yearCode}</strong><br>
+            ${yearDesc}
+        </div>
+        
+        <h2>📆 Прогноз по месяцам</h2>
+        <table>
+            <thead>
+                <tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr>
+            </thead>
+            <tbody>`;
+    
+    for (let i = 0; i < 12; i++) {
+        const monthData = monthly[i];
+        const monthDesc = pregnancyMonthDecodes[monthData.display] || "";
+        html += `<tr><td style="border:1px solid #ddd; padding:8px;">${monthData.month}</td><td style="border:1px solid #ddd; padding:8px;">${monthData.display}</td><td style="border:1px solid #ddd; padding:8px;">${monthDesc}</td></tr>`;
+    }
+    
+    html += `</tbody></table>
+        <div class="footer">
+            <p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p>
+        </div>
+    </body>
+    </html>`;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = function() { 
+        printWindow.print(); 
+        setTimeout(function() { printWindow.close(); }, 1000);
+    };
+}
+
 function renderPregnancy(year) {
+    // БЛОКИРУЕМ ДРУГИЕ ГОДА, ЕСЛИ ОПЛАЧЕН КОНКРЕТНЫЙ
+    if (pregPaid && pregPaidYear !== null && pregPaidYear !== year) {
+        alert(`❌ У вас открыт доступ только к ${pregPaidYear} году.`);
+        renderPregnancy(pregPaidYear);
+        return;
+    }
+    
     pregCurrentYear = year;
     let monthly = getMonthlyCodes(pregBase, year, pregTyp);
     let yearDisplay = pregYearly.find(c=>c.year===year)?.display || "";
     
-    // ПРОВЕРКА: показываем полную версию ТОЛЬКО если оплачена беременность
-    const isPregPaid = localStorage.getItem('pregPaid') === 'true' || pregPaid === true;
+    // ПРОВЕРЯЕМ LOCALSTORAGE
+    if (localStorage.getItem('pregPaid') === 'true') {
+        pregPaid = true;
+        const paidYear = localStorage.getItem('pregPaidYear');
+        if (paidYear) {
+            pregPaidYear = parseInt(paidYear);
+        }
+        localStorage.removeItem('pregPaid');
+    }
+    
+    const isPregPaid = pregPaid === true;
     
     let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${isPregPaid ? (pregnancyMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
+    
     let yearsHtml = `<div class="years-grid">${pregYearly.map(c => `<div class="year-card ${c.year === year ? 'active' : ''}" data-year="${c.year}"><div class="year">${c.year}</div><div class="code">${c.display}</div></div>`).join('')}</div>`;
     let yearFullDesc = `<div class="full-text" style="margin-top:16px;">${isPregPaid ? (pregnancyYearDecodes[yearDisplay] || "🔓") : "🔒 Полная расшифровка года откроется после оплаты"}</div>`;
+    let pdfButton = isPregPaid ? `<div style="text-align:center; margin:20px 0;"><button id="pregnancyPdfBtn" class="pay-btn" style="background:#4CAF50;">📥 Скачать прогноз в PDF</button></div>` : '';
     
-    document.getElementById('pregResults').innerHTML = `<div class="results-area"><h3>📅 Код года</h3>${yearsHtml}${yearFullDesc}</div><div class="results-area"><h3>📆 Код месяцев за ${year} год</h3>${monthsHtml}</div>`;
-    document.getElementById('payWallPreg').style.display = 'block';
-    document.querySelectorAll('#pregResults .year-card').forEach(c => c.addEventListener('click', () => renderPregnancy(parseInt(c.dataset.year))));
+    document.getElementById('pregResults').innerHTML = `<div class="results-area"><h3>📅 Код года</h3>${yearsHtml}${yearFullDesc}</div><div class="results-area"><h3>📆 Код месяцев за ${year} год</h3>${monthsHtml}${pdfButton}</div>`;
+    document.getElementById('payWallPreg').style.display = isPregPaid ? 'none' : 'block';
+    
+    document.querySelectorAll('#pregResults .year-card').forEach(c => {
+        c.addEventListener('click', () => {
+            const selectedYear = parseInt(c.dataset.year);
+            if (pregPaid && pregPaidYear !== null && selectedYear !== pregPaidYear) {
+                alert(`❌ У вас открыт доступ только к ${pregPaidYear} году.`);
+                return;
+            }
+            renderPregnancy(selectedYear);
+        });
+    });
+    
+    const pdfBtn = document.getElementById('pregnancyPdfBtn');
+    if(pdfBtn) pdfBtn.onclick = generatePregnancyPDF;
+    
     document.getElementById('pregResults').style.display = 'block';
 }
 
@@ -985,13 +1089,24 @@ document.getElementById('calcPregBtn').onclick = () => {
         pregYearly.push({ year: start+i, display: first+'/'+second });
     }
     renderPregnancy(start);
-    pregPaid = pregPaid;
+    // ВОССТАНАВЛИВАЕМ ФЛАГ ОПЛАТЫ, ЕСЛИ БЫЛ
+    if(localStorage.getItem('pregPaid') === 'true'){
+        pregPaid = true;
+        const paidYear = localStorage.getItem('pregPaidYear');
+        if(paidYear) pregPaidYear = parseInt(paidYear);
+        localStorage.removeItem('pregPaid');
+        setTimeout(() => {
+            if(pregPaidYear) renderPregnancy(pregPaidYear);
+        }, 500);
+    }
 };
 
 document.getElementById('pregPayBtn').onclick = () => {
     let birth = document.getElementById('birthPreg').value;
     if(!birth){ alert("Сначала введите дату"); return; }
-    showPaymentModal("Расшифровка прогноза беременности", 390, "preg", { birth, year: pregCurrentYear });
+    let year = pregCurrentYear;
+    if(!year){ alert("Выберите год"); return; }
+    showPaymentModal("Расшифровка прогноза беременности", 390, "preg", { birth, year: year });
 };
 // ============================================================================
 // 25. КАЛЬКУЛЯТОР СОВМЕСТИМОСТИ
