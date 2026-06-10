@@ -126,7 +126,7 @@
     </div>
 
     <!-- КАЛЬКУЛЯТОР 1 -->
-    <div id="tab1" class="calculator-panel active-panel"><div class="two-columns"><div class="main-col"><h2>🌟 Ваш нумерологический портрет</h2><div class="input-group"><div class="input-field"><label>📅 Дата рождения</label><input type="date" id="birthMain"></div><button class="calc-action" id="calcMainBtn">Рассчитать</button></div><div id="mainResults" class="results-area">👉 Введите дату и нажмите «Рассчитать»</div><div style="text-align:center;"><button class="pay-btn" id="mainPayBtn">🔓 Полная расшифровка за 490₽ <span class="old-price">990₽</span></button></div><div id="pdfButtons" style="display:none; text-align:center; margin-top:16px;"><button id="pdfDownloadBtn" class="pay-btn">📥 Скачать PDF</button></div></div><div class="sidebar-col"><div class="offer-card"><img src="https://raw.githubusercontent.com/olgapereberina19-code/gid/main/Обложка%20Прокачка%202.0.png"><h3>⚡ Гайд «Прокачка 2.0»</h3><div class="price">1490₽</div><div class="description"><strong>Начни работать со своими чакрами уже сейчас!</strong><br><br>Благодаря этому гайду:<br>- узнаешь над какой чакрой нужно работать в первую очередь<br>- получишь различные техники прокачки энергии на каждой чакре (от психологических упражнений, до асан йоги, ароматерапии и различных практик)<br>- прокачаешь себя, что может сказаться на всех сферах твоей жизни</div><button class="shop-btn" data-product="Гайд «Прокачка 2.0»" data-price="1490">Купить</button></div></div></div></div>
+    <div id="tab1" class="calculator-panel"><div class="two-columns"><div class="main-col"><h2>🌟 Ваш нумерологический портрет</h2><div class="input-group"><div class="input-field"><label>📅 Дата рождения</label><input type="date" id="birthMain"></div><button class="calc-action" id="calcMainBtn">Рассчитать</button></div><div id="mainResults" class="results-area">👉 Введите дату и нажмите «Рассчитать»</div><div style="text-align:center;"><button class="pay-btn" id="mainPayBtn">🔓 Полная расшифровка за 490₽ <span class="old-price">990₽</span></button></div><div id="pdfButtons" style="display:none; text-align:center; margin-top:16px;"><button id="pdfDownloadBtn" class="pay-btn">📥 Скачать PDF</button></div></div><div class="sidebar-col"><div class="offer-card"><img src="https://raw.githubusercontent.com/olgapereberina19-code/gid/main/Обложка%20Прокачка%202.0.png"><h3>⚡ Гайд «Прокачка 2.0»</h3><div class="price">1490₽</div><div class="description"><strong>Начни работать со своими чакрами уже сейчас!</strong><br><br>Благодаря этому гайду:<br>- узнаешь над какой чакрой нужно работать в первую очередь<br>- получишь различные техники прокачки энергии на каждой чакре (от психологических упражнений, до асан йоги, ароматерапии и различных практик)<br>- прокачаешь себя, что может сказаться на всех сферах твоей жизни</div><button class="shop-btn" data-product="Гайд «Прокачка 2.0»" data-price="1490">Купить</button></div></div></div></div>
 
     <!-- КАЛЬКУЛЯТОР 2 - БЕРЕМЕННОСТЬ -->
     <div id="tab2" class="calculator-panel"><div class="two-columns"><div class="main-col"><h2>🤰 Калькулятор беременности</h2><div class="input-group"><div class="input-field"><label>📅 Дата рождения</label><input type="date" id="birthPreg"></div><button class="calc-action" id="calcPregBtn">Рассчитать</button></div><div id="pregResults" style="display:none;"></div><div id="payWallPreg" style="display:none; text-align:center;"><button class="pay-btn" id="pregPayBtn">🔓 Расшифровка прогноза беременности за 390₽ <span class="old-price">990₽</span></button></div><div class="disclaimer">⚠️ Данные расчеты показывают энергетический потенциал и не являются медицинским прогнозом. При планировании беременности и сложностях с зачатием обращайтесь к врачу.</div></div><div class="sidebar-col"><div class="offer-card"><img src="https://raw.githubusercontent.com/olgapereberina19-code/gid/main/обложка%20все%20о%20беременности.png"><h3>📘 Гайд «Все о беременности»</h3><div class="price">990₽</div><div class="description">Благодаря этому гайду ты узнаешь:<br>- Есть ли у тебя энергетические блоки, которые могут мешать тебе забеременеть и как с ними работать<br>- Есть ли у тебя негативные родовые программы, которые могут мешать тебе забеременеть и что с ними делать<br>- Есть ли у тебя кармические отработки, которые могут мешать тебе забеременеть и что с ними делать</div><div class="disclaimer">⚠️ Данный гайд рассматривает проблемы зачатия с энергетической точки зрения и не является медицинской рекомендацией. В первую очередь при планировании беременности и проблемах в этой сфере обращайтесь к врачу.</div><button class="shop-btn" data-product="Гайд «Все о беременности»" data-price="990">Купить</button></div></div></div></div>
@@ -166,6 +166,20 @@
     const paid = urlParams.get('paid');
     const tab = urlParams.get('tab');
     
+    // ФУНКЦИЯ ОТКРЫТИЯ ВКЛАДКИ
+    function openTab(tabId) {
+        // Скрываем все панели
+        document.querySelectorAll('.calculator-panel').forEach(p => p.classList.remove('active-panel'));
+        // Убираем активный класс со всех кнопок
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        // Показываем нужную панель
+        const targetPanel = document.getElementById(tabId);
+        if (targetPanel) targetPanel.classList.add('active-panel');
+        // Активируем кнопку
+        const targetBtn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+        if (targetBtn) targetBtn.classList.add('active');
+    }
+    
     if (paid === '1') {
         // Сохраняем флаги оплаты
         localStorage.setItem('mainPaid', 'true');
@@ -173,86 +187,72 @@
         localStorage.setItem('compatPaid', 'true');
         localStorage.setItem('forecastPaid', 'true');
         
-        // Определяем, что открывать
-        let targetTab = 'tab1'; // по умолчанию портрет
-        let targetMessage = 'Ваш нумерологический портрет теперь открыт полностью.';
+        let targetTab = 'tab1';
+        let serviceName = 'нумерологический портрет';
         
         if (tab === 'forecast') {
             targetTab = 'tab4';
-            targetMessage = 'Ваш личный прогноз теперь открыт полностью.';
+            serviceName = 'личный прогноз';
             const savedYear = localStorage.getItem('forecastYear');
             if (savedYear) {
-                forecastPaid = true;
-                forecastPaidYear = parseInt(savedYear);
+                localStorage.setItem('forecastPaidYear', savedYear);
             }
         } else if (tab === 'preg') {
             targetTab = 'tab2';
-            targetMessage = 'Ваш прогноз беременности теперь открыт полностью.';
+            serviceName = 'прогноз беременности';
         } else if (tab === 'compat') {
             targetTab = 'tab3';
-            targetMessage = 'Ваша расшифровка совместимости теперь открыта полностью.';
+            serviceName = 'расшифровку совместимости';
         }
         
+        // ОТКРЫВАЕМ НУЖНУЮ ВКЛАДКУ
+        openTab(targetTab);
+        
         // Показываем сообщение
-        setTimeout(() => { alert('✅ Оплата прошла успешно! ' + targetMessage); }, 500);
+        setTimeout(() => {
+            alert(`✅ Оплата прошла успешно!\n\nВаша ${serviceName} теперь открыта.\n\nВведите дату рождения и нажмите "Рассчитать".`);
+        }, 500);
         
-        // ПЕРЕКЛЮЧАЕМ ВКЛАДКУ ПРИНУДИТЕЛЬНО
-        // 1. Убираем активный класс со всех панелей
-        document.querySelectorAll('.calculator-panel').forEach(p => p.classList.remove('active-panel'));
-        // 2. Убираем активный класс со всех кнопок
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        // 3. Активируем нужную панель
-        document.getElementById(targetTab).classList.add('active-panel');
-        // 4. Активируем соответствующую кнопку
-        const activeBtn = document.querySelector(`.nav-btn[data-tab="${targetTab}"]`);
-        if (activeBtn) activeBtn.classList.add('active');
-        
-        // Для прогноза запускаем расчёт
+        // Для прогноза подставляем сохранённую дату
         if (tab === 'forecast') {
             const savedBirth = localStorage.getItem('forecastBirth');
-            const savedYear = localStorage.getItem('forecastYear');
             if (savedBirth) {
-                document.getElementById('birthForecast').value = savedBirth;
-            }
-            if (savedYear) {
-                forecastPaidYear = parseInt(savedYear);
-            }
-            // Запускаем расчёт
-            setTimeout(() => {
-                document.getElementById('calcForecastBtn').click();
-                // Перерисовываем с оплаченным годом
                 setTimeout(() => {
-                    if (forecastPaidYear) {
-                        renderForecast(forecastPaidYear);
-                    }
-                }, 500);
-            }, 300);
+                    document.getElementById('birthForecast').value = savedBirth;
+                }, 300);
+            }
         } else if (tab === 'preg') {
             const savedBirth = localStorage.getItem('pregBirth');
             if (savedBirth) {
-                document.getElementById('birthPreg').value = savedBirth;
-                setTimeout(() => { document.getElementById('calcPregBtn').click(); }, 300);
+                setTimeout(() => {
+                    document.getElementById('birthPreg').value = savedBirth;
+                }, 300);
             }
         } else if (tab === 'compat') {
             const savedMale = localStorage.getItem('compatMale');
             const savedFemale = localStorage.getItem('compatFemale');
             if (savedMale && savedFemale) {
-                document.getElementById('birthMale').value = savedMale;
-                document.getElementById('birthFemale').value = savedFemale;
-                setTimeout(() => { document.getElementById('calcCompatBtn').click(); }, 300);
+                setTimeout(() => {
+                    document.getElementById('birthMale').value = savedMale;
+                    document.getElementById('birthFemale').value = savedFemale;
+                }, 300);
             }
         } else {
             const savedBirth = localStorage.getItem('mainBirth');
             if (savedBirth) {
-                document.getElementById('birthMain').value = savedBirth;
-                setTimeout(() => { document.getElementById('calcMainBtn').click(); }, 300);
+                setTimeout(() => {
+                    document.getElementById('birthMain').value = savedBirth;
+                }, 300);
             }
         }
         
-        // Очищаем URL от параметров
+        // Очищаем URL
         setTimeout(() => {
             window.history.replaceState({}, document.title, window.location.pathname);
         }, 100);
+    } else {
+        // ЕСЛИ НЕТ ПАРАМЕТРА ОПЛАТЫ - ОТКРЫВАЕМ ПОРТРЕТ
+        openTab('tab1');
     }
 })();
 
