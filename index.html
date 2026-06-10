@@ -183,14 +183,12 @@
             if (savedYear) {
                 localStorage.setItem('forecastPaidYear', savedYear);
             }
-            // НЕ УСТАНАВЛИВАЕМ ДРУГИЕ ФЛАГИ
-       } else if (tab === 'preg') {
-    localStorage.setItem('pregPaid', 'true');
-    const savedYear = localStorage.getItem('pregYear');
-    if (savedYear) {
-        localStorage.setItem('pregPaidYear', savedYear);
-    }
-}
+        } else if (tab === 'preg') {
+            localStorage.setItem('pregPaid', 'true');
+            const savedYear = localStorage.getItem('pregYear');
+            if (savedYear) {
+                localStorage.setItem('pregPaidYear', savedYear);
+            }
         } else if (tab === 'compat') {
             localStorage.setItem('compatPaid', 'true');
         } else {
