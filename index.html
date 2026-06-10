@@ -1393,21 +1393,31 @@ window.onload = function() {
         }
         localStorage.removeItem('compatPaid');
     }
-    if(localStorage.getItem('forecastPaid') === 'true'){
+    
+    // ВОССТАНАВЛИВАЕМ ФЛАГИ ОПЛАТЫ ДЛЯ ПРОГНОЗА
+    const savedForecastPaid = localStorage.getItem('forecastPaid');
+    const savedForecastPaidYear = localStorage.getItem('forecastPaidYear');
+    
+    if (savedForecastPaid === 'true' || savedForecastPaidYear) {
         forecastPaid = true;
-        let savedBirth = localStorage.getItem('forecastBirth');
-        let savedYear = localStorage.getItem('forecastYear');
-        if(savedBirth && savedYear){
-            document.getElementById('birthForecast').value = savedBirth;
-            forecastPaidYear = parseInt(savedYear);
-            document.getElementById('calcForecastBtn').click();
-            setTimeout(() => {
-                renderForecast(forecastPaidYear);
-            }, 500);
-        } else if(savedBirth){
-            document.getElementById('birthForecast').value = savedBirth;
-            document.getElementById('calcForecastBtn').click();
+        if (savedForecastPaidYear) {
+            forecastPaidYear = parseInt(savedForecastPaidYear);
         }
+        
+        let savedBirth = localStorage.getItem('forecastBirth');
+        if (savedBirth) {
+            document.getElementById('birthForecast').value = savedBirth;
+        }
+        
+        // Запускаем расчёт
+        document.getElementById('calcForecastBtn').click();
+        setTimeout(() => {
+            if (forecastPaidYear) {
+                renderForecast(forecastPaidYear);
+            }
+        }, 500);
+        
+        // Очищаем только временный флаг, но НЕ УДАЛЯЕМ forecastPaidYear
         localStorage.removeItem('forecastPaid');
     }
 };
