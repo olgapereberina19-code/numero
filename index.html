@@ -181,104 +181,70 @@
         localStorage.setItem('compatPaid', 'true');
         localStorage.setItem('forecastPaid', 'true');
         
-        let targetTab = 'tab1';
-        let serviceName = 'нумерологический портрет';
-        
+        // ПРИНУДИТЕЛЬНО ОТКРЫВАЕМ НУЖНУЮ ВКЛАДКУ В ЗАВИСИМОСТИ ОТ tab
         if (tab === 'forecast') {
-            targetTab = 'tab4';
-            serviceName = 'личный прогноз';
+            // СОХРАНЯЕМ ГОД
             const savedYear = localStorage.getItem('forecastYear');
             if (savedYear) {
                 localStorage.setItem('forecastPaidYear', savedYear);
+                forecastPaidYear = parseInt(savedYear);
             }
-        } else if (tab === 'preg') {
-            targetTab = 'tab2';
-            serviceName = 'прогноз беременности';
-        } else if (tab === 'compat') {
-            targetTab = 'tab3';
-            serviceName = 'расшифровку совместимости';
-        }
-        
-        // ОТКРЫВАЕМ ВКЛАДКУ
-        openTab(targetTab);
-        
-        // ПОКАЗЫВАЕМ СООБЩЕНИЕ
-        setTimeout(() => {
-            alert(`✅ Оплата прошла успешно!\n\nВаша ${serviceName} теперь открыта.`);
-        }, 500);
-        
-        // ДЛЯ ПРОГНОЗА: подставляем дату и запускаем расчёт ПОСЛЕ ОТКРЫТИЯ ВКЛАДКИ
-        if (tab === 'forecast') {
+            forecastPaid = true;
+            
+            // ОТКРЫВАЕМ ВКЛАДКУ ПРОГНОЗА
+            openTab('tab4');
+            
+            setTimeout(() => {
+                alert(`✅ Оплата прошла успешно!\n\nВаш личный прогноз теперь открыт полностью.`);
+            }, 500);
+            
+            // ПОДСТАВЛЯЕМ ДАТУ И ЗАПУСКАЕМ РАСЧЁТ
             const savedBirth = localStorage.getItem('forecastBirth');
-            const savedYear = localStorage.getItem('forecastYear');
-            
-            // Используем MutationObserver чтобы дождаться открытия вкладки
-            const observer = new MutationObserver(function(mutations) {
-                const tab4 = document.getElementById('tab4');
-                if (tab4 && tab4.classList.contains('active-panel')) {
-                    observer.disconnect();
-                    
-                    if (savedBirth) {
-                        document.getElementById('birthForecast').value = savedBirth;
-                    }
-                    if (savedYear) {
-                        forecastPaid = true;
-                        forecastPaidYear = parseInt(savedYear);
-                    }
-                    
-                    const calcBtn = document.getElementById('calcForecastBtn');
-                    if (calcBtn) {
-                        calcBtn.click();
-                        setTimeout(() => {
-                            if (forecastPaidYear) {
-                                renderForecast(forecastPaidYear);
-                            }
-                        }, 500);
-                    }
-                }
-            });
-            
-            observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
-            
-            // Запасной таймаут на всякий случай
-            setTimeout(() => {
-                observer.disconnect();
-                if (savedBirth) {
+            if (savedBirth) {
+                setTimeout(() => {
                     document.getElementById('birthForecast').value = savedBirth;
-                }
-                if (savedYear) {
-                    forecastPaid = true;
-                    forecastPaidYear = parseInt(savedYear);
-                }
-                const calcBtn = document.getElementById('calcForecastBtn');
-                if (calcBtn) calcBtn.click();
-            }, 2000);
-        } else if (tab === 'preg') {
+                    const calcBtn = document.getElementById('calcForecastBtn');
+                    if (calcBtn) calcBtn.click();
+                    setTimeout(() => {
+                        if (forecastPaidYear) renderForecast(forecastPaidYear);
+                    }, 500);
+                }, 500);
+            }
+        } 
+        else if (tab === 'preg') {
+            openTab('tab2');
+            setTimeout(() => { alert(`✅ Оплата прошла успешно!\n\nВаш прогноз беременности теперь открыт полностью.`); }, 500);
             const savedBirth = localStorage.getItem('pregBirth');
-            setTimeout(() => {
-                if (savedBirth) {
+            if (savedBirth) {
+                setTimeout(() => {
                     document.getElementById('birthPreg').value = savedBirth;
                     document.getElementById('calcPregBtn').click();
-                }
-            }, 500);
-        } else if (tab === 'compat') {
+                }, 500);
+            }
+        } 
+        else if (tab === 'compat') {
+            openTab('tab3');
+            setTimeout(() => { alert(`✅ Оплата прошла успешно!\n\nВаша расшифровка совместимости теперь открыта полностью.`); }, 500);
             const savedMale = localStorage.getItem('compatMale');
             const savedFemale = localStorage.getItem('compatFemale');
-            setTimeout(() => {
-                if (savedMale && savedFemale) {
+            if (savedMale && savedFemale) {
+                setTimeout(() => {
                     document.getElementById('birthMale').value = savedMale;
                     document.getElementById('birthFemale').value = savedFemale;
                     document.getElementById('calcCompatBtn').click();
-                }
-            }, 500);
-        } else {
+                }, 500);
+            }
+        } 
+        else {
+            openTab('tab1');
+            setTimeout(() => { alert(`✅ Оплата прошла успешно!\n\nВаш нумерологический портрет теперь открыт полностью.`); }, 500);
             const savedBirth = localStorage.getItem('mainBirth');
-            setTimeout(() => {
-                if (savedBirth) {
+            if (savedBirth) {
+                setTimeout(() => {
                     document.getElementById('birthMain').value = savedBirth;
                     document.getElementById('calcMainBtn').click();
-                }
-            }, 500);
+                }, 500);
+            }
         }
         
         setTimeout(() => {
