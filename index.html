@@ -887,11 +887,39 @@ document.getElementById('calcMainBtn').onclick = () => {
     let rodDisplay = rodFirst + "/" + rodSecond;
     let parentsDisplay = parentsFirst + "/" + parentsSecond;
     
-    let periods = prod.toString().slice(1).slice(0, 6).split('').map(c => parseInt(c) || 0);
-    while (periods.length < 6) periods.push(0);
-    let periodsHtml = `<div class="periods-grid">${periods.map((p,i) => `<div class="period-card"><div class="period-title">${p} — ${periodShort[p]}</div><div class="period-age">${agesList[i]}</div></div>`).join('')}</div>`;
+    // РАСЧЁТ ПЕРИОДОВ ЖИЗНИ (ДИНАМИЧЕСКОЕ КОЛИЧЕСТВО)
+    const prodStr = prod.toString();
+    let periods = prodStr.slice(1).slice(0, 6).split('').map(c => parseInt(c) || 0);
+    // Убираем лишние нули в конце
+    while (periods.length > 1 && periods[periods.length - 1] === 0) {
+        periods.pop();
+    }
+    const periodCount = periods.length;
+    let periodLength = 0;
+    if (periodCount === 5) {
+        periodLength = 15;
+    } else if (periodCount === 6) {
+        periodLength = 12;
+    } else if (periodCount === 4) {
+        periodLength = 20;
+    } else if (periodCount === 3) {
+        periodLength = 25;
+    } else {
+        periodLength = Math.floor(90 / periodCount);
+    }
+    const dynamicAgesList = [];
+    for (let i = 0; i < periodCount; i++) {
+        const start = i * periodLength;
+        const end = (i === periodCount - 1) ? `${start + periodLength}+` : `${start + periodLength}`;
+        dynamicAgesList.push(`${start}-${end} лет`);
+    }
+    let periodsHtml = `<div class="periods-grid">`;
+    for (let i = 0; i < periodCount; i++) {
+        periodsHtml += `<div class="period-card"><div class="period-title">${periods[i]} — ${periodShort[periods[i]]}</div><div class="period-age">${dynamicAgesList[i]}</div></div>`;
+    }
+    periodsHtml += `</div>`;
     
-    currentMainData = { ch, pnum, rodFirst, pastFirst, presFirst, parentsFirst, periods, agesList, dt, rodDisplay, pastDisplay, presDisplay, parentsDisplay };
+    currentMainData = { ch, pnum, rodFirst, pastFirst, presFirst, parentsFirst, periods, periodCount, dynamicAgesList, dt, rodDisplay, pastDisplay, presDisplay, parentsDisplay };
     
     let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
     let chakraRows = chakraNames.map((n,i) => `<tr><td>${n}</td><td>${ch[i]}%</td><td class="code-pair">${getChakraStatus(ch[i])}</td></tr>`).join('');
@@ -899,8 +927,9 @@ document.getElementById('calcMainBtn').onclick = () => {
     
     let psychotypeName = ["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][pnum];
     
-    // ПРОВЕРКА: показываем полную версию ТОЛЬКО если оплачен портрет
-    const isMainPaid = localStorage.getItem('mainPaid') === 'true' || mainPaid === true;
+    // ПРОВЕРКА: показываем полную версию ТОЛЬКО если оплачена ЭТА дата рождения
+    const savedPaidBirth = localStorage.getItem('mainPaidBirth');
+    const isMainPaid = (savedPaidBirth === val) || (localStorage.getItem('mainPaid') === 'true' && mainPaid === true);
     
     if (isMainPaid) {
         let chFullHtml = chakraNames.map((n,i) => `<div class="result-block"><strong>${n}: ${ch[i]}%</strong><div class="full-text">${chakraFull[n][getChakraStatus(ch[i])]}</div></div>`).join('');
@@ -910,7 +939,7 @@ document.getElementById('calcMainBtn').onclick = () => {
                         <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${pastDisplay}<div class="full-text">${pastFull[pastFirst]}</div></div>
                         <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${presDisplay}<div class="full-text">${presentFull[presFirst]}</div></div>
                         <div class="result-block"><strong>👪 Задача родителей:</strong> ${parentsDisplay}<div class="full-text">${parentsFull[parentsFirst]}</div></div>
-                        <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periods.map((p,i)=>`<div>${p} — ${periodNames[p]} (${agesList[i]})</div><div class="full-text">${periodsFull[p]}</div>`).join('')}</div>`;
+                        <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periods.map((p,i)=>`<div>${p} — ${periodNames[p]} (${dynamicAgesList[i]})</div><div class="full-text">${periodsFull[p]}</div>`).join('')}</div>`;
         document.getElementById('mainResults').innerHTML = fullHtml;
         document.getElementById('pdfButtons').style.display = 'block';
     } else {
@@ -941,6 +970,23 @@ document.getElementById('calcMainBtn').onclick = () => {
 document.getElementById('mainPayBtn').onclick = () => {
     if (mainPaid) return;
     showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
+};
+
+// ИСПРАВЛЕННАЯ КНОПКА PDF
+document.getElementById('pdfDownloadBtn').onclick = () => {
+    const element = document.getElementById('mainResults');
+    if (!element || element.innerHTML.includes('👉 Введите дату')) {
+        alert("Сначала рассчитайте расшифровку!");
+        return;
+    }
+    const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: 'numerology_report.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
 };
 // ============================================================================
 // 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
@@ -1471,6 +1517,7 @@ document.getElementById('modalPayBtn').onclick = () => {
         let birth = document.getElementById('modalBirth')?.value;
         if(!birth){ alert("Подтвердите дату рождения"); return; }
         localStorage.setItem('mainBirth', birth);
+        localStorage.setItem('mainPaidBirth', birth);  // ← СОХРАНЯЕМ ДАТУ ДЛЯ ПРОВЕРКИ
     } else if(currentPayment.type === 'preg'){
         let birth = document.getElementById('modalBirth')?.value;
         let year = document.getElementById('modalYear')?.value;
