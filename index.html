@@ -891,7 +891,10 @@ document.getElementById('calcMainBtn').onclick = () => {
     
     let psychotypeName = ["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][pnum];
     
-    if (mainPaid) {
+    // ПРОВЕРКА: показываем полную версию ТОЛЬКО если оплачен портрет
+    const isMainPaid = localStorage.getItem('mainPaid') === 'true' || mainPaid === true;
+    
+    if (isMainPaid) {
         let chFullHtml = chakraNames.map((n,i) => `<div class="result-block"><strong>${n}: ${ch[i]}%</strong><div class="full-text">${chakraFull[n][getChakraStatus(ch[i])]}</div></div>`).join('');
         let fullHtml = `<div class="result-block"><strong>🧠 Психотип:</strong> ${pnum} — ${psychotypeName}<div class="full-text">${psychotypesFull[pnum]}</div></div>
                         ${chFullHtml}
@@ -910,8 +913,20 @@ document.getElementById('calcMainBtn').onclick = () => {
             <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${pastDisplay} — ${pastShort[pastFirst]}</div>
             <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${presDisplay} — ${presentShort[presFirst]}</div>
             <div class="result-block"><strong>👪 Задача родителей:</strong> ${parentsDisplay} — ${parentsShort[parentsFirst]}</div>
-            <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periodsHtml}</div>`;
+            <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periodsHtml}</div>
+            <div style="margin-top:20px; padding:10px; background:#FFF3E0; border-radius:12px; text-align:center;">
+                🔓 Полная расшифровка откроется после оплаты. 
+                <button class="pay-btn" id="inlinePayBtn" style="margin-left:10px;">Оплатить 490₽</button>
+            </div>`;
         document.getElementById('pdfButtons').style.display = 'none';
+        
+        // Добавляем обработчик для кнопки внутри результатов
+        const inlineBtn = document.getElementById('inlinePayBtn');
+        if(inlineBtn) {
+            inlineBtn.onclick = () => {
+                showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: val });
+            };
+        }
     }
 };
 
@@ -919,7 +934,6 @@ document.getElementById('mainPayBtn').onclick = () => {
     if (mainPaid) return;
     showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
 };
-
 // ============================================================================
 // 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
 // ============================================================================
@@ -936,9 +950,14 @@ function renderPregnancy(year) {
     pregCurrentYear = year;
     let monthly = getMonthlyCodes(pregBase, year, pregTyp);
     let yearDisplay = pregYearly.find(c=>c.year===year)?.display || "";
-    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${pregPaid ? (pregnancyMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
+    
+    // ПРОВЕРКА: показываем полную версию ТОЛЬКО если оплачена беременность
+    const isPregPaid = localStorage.getItem('pregPaid') === 'true' || pregPaid === true;
+    
+    let monthsHtml = `<table class="months-table"><thead><tr><th>Месяц</th><th>Код</th><th>Расшифровка</th></tr></thead><tbody>${monthly.map(m => `<tr><td class="code-pair">${m.month}</td><td class="code-pair">${m.display}</td><td class="meaning-cell">${isPregPaid ? (pregnancyMonthDecodes[m.display] || "🔓") : "🔒"}</td></tr>`).join('')}</tbody></table>`;
     let yearsHtml = `<div class="years-grid">${pregYearly.map(c => `<div class="year-card ${c.year === year ? 'active' : ''}" data-year="${c.year}"><div class="year">${c.year}</div><div class="code">${c.display}</div></div>`).join('')}</div>`;
-    let yearFullDesc = `<div class="full-text" style="margin-top:16px;">${pregPaid ? (pregnancyYearDecodes[yearDisplay] || "🔓") : "🔒 Полная расшифровка года откроется после оплаты"}</div>`;
+    let yearFullDesc = `<div class="full-text" style="margin-top:16px;">${isPregPaid ? (pregnancyYearDecodes[yearDisplay] || "🔓") : "🔒 Полная расшифровка года откроется после оплаты"}</div>`;
+    
     document.getElementById('pregResults').innerHTML = `<div class="results-area"><h3>📅 Код года</h3>${yearsHtml}${yearFullDesc}</div><div class="results-area"><h3>📆 Код месяцев за ${year} год</h3>${monthsHtml}</div>`;
     document.getElementById('payWallPreg').style.display = 'block';
     document.querySelectorAll('#pregResults .year-card').forEach(c => c.addEventListener('click', () => renderPregnancy(parseInt(c.dataset.year))));
@@ -969,7 +988,6 @@ document.getElementById('pregPayBtn').onclick = () => {
     if(!birth){ alert("Сначала введите дату"); return; }
     showPaymentModal("Расшифровка прогноза беременности", 390, "preg", { birth, year: pregCurrentYear });
 };
-
 // ============================================================================
 // 25. КАЛЬКУЛЯТОР СОВМЕСТИМОСТИ
 // ============================================================================
@@ -1000,6 +1018,10 @@ function renderCompat() {
     let sum = (mNum+fNum)%9||9, diff = Math.abs(mNum-fNum);
     let rows = "";
     let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
+    
+    // ПРОВЕРКА: показываем полную версию ТОЛЬКО если оплачена совместимость
+    const isCompatPaid = localStorage.getItem('compatPaid') === 'true' || compatPaid === true;
+    
     for(let i=0;i<6;i++){
         let vm=mCh[i], vf=fCh[i];
         let status = getCompatibilityStatus(chakraNames[i], vm, vf);
@@ -1010,19 +1032,19 @@ function renderCompat() {
             case "imbalance": statusText = "Перекос"; break;
             case "critical": statusText = "Критическая нехватка"; break;
         }
-        let fullText = compatPaid ? (chakraCompatibilityTexts[chakraNames[i]][status.type] || "") : "";
-        rows += `<tr><td class="code-pair">${chakraNames[i]}</td><td class="code-pair">${vm}%</td><td class="code-pair">${vf}%</td><td class="code-pair">${statusText}${fullText ? `<br><small>${fullText}</small>` : ""}</td></tr>`;
+        let fullText = isCompatPaid ? (chakraCompatibilityTexts[chakraNames[i]][status.type] || "") : "";
+        rows += `<tr><td class="code-pair">${chakraNames[i]}</td><td class="code-pair">${vm}%</td><td class="code-pair">${vf}%</td><td class="code-pair">${statusText}${fullText ? `<br><small>${fullText}</small>` : ""}<tr></tr>`;
     }
     let pairKey = mNum+"+"+fNum;
-    let compatTypesText = compatPaid ? (compatibilityTypesFull[pairKey] || "🔓") : "🔒 Оплатите";
+    let compatTypesText = isCompatPaid ? (compatibilityTypesFull[pairKey] || "🔓") : "🔒 Оплатите";
     let html = `<div class="result-block"><strong>🧬 Пара:</strong> Мужчина ${mNum} — ${["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][mNum]} + Женщина ${fNum} — ${["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][fNum]}</div>
         <div class="result-block"><strong>📖 Совместимость типологий:</strong> ${compatTypesText}</div>
         <div class="result-block"><strong>🎯 Задача пары:</strong> ${sum} — ${pairTaskShort[sum]}</div>
         <div class="result-block"><strong>⚔️ Испытание:</strong> ${diff} — ${pairTrialShort[diff]}</div>
         <div class="result-block"><strong>🌀 Совместимость по чакрам</strong><table class="compat-table"><thead><tr><th>Чакра</th><th>Мужчина</th><th>Женщина</th><th>Совместимость</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-    if(compatPaid) html += `<div class="full-text"><strong>⭐ Задача пары:</strong> ${pairTaskFull[sum]}<br><strong>⭐ Испытание:</strong> ${pairTrialFull[diff]}</div>`;
+    if(isCompatPaid) html += `<div class="full-text"><strong>⭐ Задача пары:</strong> ${pairTaskFull[sum]}<br><strong>⭐ Испытание:</strong> ${pairTrialFull[diff]}</div>`;
     document.getElementById('compatResults').innerHTML = html;
-    document.getElementById('compatPdfBtn').style.display = compatPaid ? 'block' : 'none';
+    document.getElementById('compatPdfBtn').style.display = isCompatPaid ? 'block' : 'none';
 }
 
 document.getElementById('calcCompatBtn').onclick = renderCompat;
