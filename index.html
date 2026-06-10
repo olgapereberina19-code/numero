@@ -176,10 +176,21 @@
     }
     
     if (paid === '1') {
-        localStorage.setItem('mainPaid', 'true');
-        localStorage.setItem('pregPaid', 'true');
-        localStorage.setItem('compatPaid', 'true');
-        localStorage.setItem('forecastPaid', 'true');
+        // УСТАНАВЛИВАЕМ ФЛАГИ ТОЛЬКО ДЛЯ ОПЛАЧЕННОГО ТОВАРА
+        if (tab === 'forecast') {
+            localStorage.setItem('forecastPaid', 'true');
+            const savedYear = localStorage.getItem('forecastYear');
+            if (savedYear) {
+                localStorage.setItem('forecastPaidYear', savedYear);
+            }
+            // НЕ УСТАНАВЛИВАЕМ ДРУГИЕ ФЛАГИ
+        } else if (tab === 'preg') {
+            localStorage.setItem('pregPaid', 'true');
+        } else if (tab === 'compat') {
+            localStorage.setItem('compatPaid', 'true');
+        } else {
+            localStorage.setItem('mainPaid', 'true');
+        }
         
         let targetTab = 'tab1';
         let serviceName = 'нумерологический портрет';
@@ -187,10 +198,6 @@
         if (tab === 'forecast') {
             targetTab = 'tab4';
             serviceName = 'личный прогноз';
-            const savedYear = localStorage.getItem('forecastYear');
-            if (savedYear) {
-                localStorage.setItem('forecastPaidYear', savedYear);
-            }
         } else if (tab === 'preg') {
             targetTab = 'tab2';
             serviceName = 'прогноз беременности';
@@ -207,12 +214,11 @@
             alert(`✅ Оплата прошла успешно!\n\nВаша ${serviceName} теперь открыта.`);
         }, 500);
         
-        // ДЛЯ ПРОГНОЗА: подставляем дату и запускаем расчёт ПОСЛЕ ОТКРЫТИЯ ВКЛАДКИ
+        // ДЛЯ ПРОГНОЗА: подставляем дату и запускаем расчёт
         if (tab === 'forecast') {
             const savedBirth = localStorage.getItem('forecastBirth');
             const savedYear = localStorage.getItem('forecastYear');
             
-            // Используем MutationObserver чтобы дождаться открытия вкладки
             const observer = new MutationObserver(function(mutations) {
                 const tab4 = document.getElementById('tab4');
                 if (tab4 && tab4.classList.contains('active-panel')) {
@@ -240,7 +246,6 @@
             
             observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
             
-            // Запасной таймаут на всякий случай
             setTimeout(() => {
                 observer.disconnect();
                 if (savedBirth) {
@@ -1411,6 +1416,7 @@ document.getElementById('modalPayBtn').onclick = () => {
 // 30. ВОССТАНОВЛЕНИЕ ПОСЛЕ ОПЛАТЫ
 // ============================================================================
 window.onload = function() {
+    // ПОРТРЕТ
     if(localStorage.getItem('mainPaid') === 'true'){
         mainPaid = true;
         let savedBirth = localStorage.getItem('mainBirth');
@@ -1420,6 +1426,8 @@ window.onload = function() {
         }
         localStorage.removeItem('mainPaid');
     }
+    
+    // БЕРЕМЕННОСТЬ
     if(localStorage.getItem('pregPaid') === 'true'){
         pregPaid = true;
         let savedBirth = localStorage.getItem('pregBirth');
@@ -1429,6 +1437,8 @@ window.onload = function() {
         }
         localStorage.removeItem('pregPaid');
     }
+    
+    // СОВМЕСТИМОСТЬ
     if(localStorage.getItem('compatPaid') === 'true'){
         compatPaid = true;
         let savedMale = localStorage.getItem('compatMale');
@@ -1441,14 +1451,12 @@ window.onload = function() {
         localStorage.removeItem('compatPaid');
     }
     
-    // ВОССТАНАВЛИВАЕМ ФЛАГИ ОПЛАТЫ ДЛЯ ПРОГНОЗА
-    const savedForecastPaid = localStorage.getItem('forecastPaid');
-    const savedForecastPaidYear = localStorage.getItem('forecastPaidYear');
-    
-    if (savedForecastPaid === 'true' || savedForecastPaidYear) {
+    // ПРОГНОЗ — АВТОМАТИЧЕСКИЙ РАСЧЁТ С ЗАДЕРЖКОЙ
+    if(localStorage.getItem('forecastPaid') === 'true'){
         forecastPaid = true;
-        if (savedForecastPaidYear) {
-            forecastPaidYear = parseInt(savedForecastPaidYear);
+        const paidYear = localStorage.getItem('forecastPaidYear');
+        if (paidYear) {
+            forecastPaidYear = parseInt(paidYear);
         }
         
         let savedBirth = localStorage.getItem('forecastBirth');
@@ -1456,19 +1464,29 @@ window.onload = function() {
             document.getElementById('birthForecast').value = savedBirth;
         }
         
-        // Запускаем расчёт
-        document.getElementById('calcForecastBtn').click();
-        setTimeout(() => {
-            if (forecastPaidYear) {
-                renderForecast(forecastPaidYear);
+        // ДАЁМ ВРЕМЯ НА ЗАГРУЗКУ ВСЕХ ЭЛЕМЕНТОВ
+        setTimeout(function() {
+            const calcBtn = document.getElementById('calcForecastBtn');
+            if (calcBtn) {
+                calcBtn.click();
+                console.log("✅ Автоматический расчёт прогноза запущен");
+            } else {
+                console.log("❌ Кнопка calcForecastBtn не найдена");
             }
+            
+            // ДАЁМ ВРЕМЯ НА РАСЧЁТ И ПЕРЕРИСОВЫВАЕМ С ОПЛАЧЕННЫМ ГОДОМ
+            setTimeout(function() {
+                if (forecastPaidYear) {
+                    renderForecast(forecastPaidYear);
+                    console.log("✅ Прогноз перерисован для года:", forecastPaidYear);
+                }
+            }, 800);
         }, 500);
         
-        // Очищаем только временный флаг, но НЕ УДАЛЯЕМ forecastPaidYear
         localStorage.removeItem('forecastPaid');
+        // НЕ УДАЛЯЕМ forecastPaidYear
     }
 };
-
 // ============================================================================
 // 31. ПОЛИТИКА И ОФЕРТА
 // ============================================================================
