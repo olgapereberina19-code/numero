@@ -887,7 +887,7 @@ document.getElementById('calcMainBtn').onclick = () => {
     let rodDisplay = rodFirst + "/" + rodSecond;
     let parentsDisplay = parentsFirst + "/" + parentsSecond;
     
-    // РАСЧЁТ ПЕРИОДОВ ЖИЗНИ (ДИНАМИЧЕСКОЕ КОЛИЧЕСТВО)
+    // РАСЧЁТ ПЕРИОДОВ ЖИЗНИ
     const prodStr = prod.toString();
     let periods = prodStr.slice(1).slice(0, 6).split('').map(c => parseInt(c) || 0);
     while (periods.length > 1 && periods[periods.length - 1] === 0) {
@@ -925,8 +925,19 @@ document.getElementById('calcMainBtn').onclick = () => {
     currentMainData = { ch, pnum, rodFirst, pastFirst, presFirst, parentsFirst, periods, periodCount, dynamicAgesList, dt, rodDisplay, pastDisplay, presDisplay, parentsDisplay };
     
     let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
-    let chakraRows = chakraNames.map((n,i) => `<tr><td>${n}</td><td>${ch[i]}%<tr><td class="code-pair">${getChakraStatus(ch[i])}</td></tr>`).join('');
-    let chakraTable = `<table class="chakra-table"><thead><tr><th>Название чакры</th><th>Емкость чакры</th><th>Значение</th></tr></thead><tbody>${chakraRows}</tbody></table>`;
+    
+    // ИСПРАВЛЕННАЯ ТАБЛИЦА ЧАКР
+    let chakraRows = chakraNames.map((n,i) => `<tr><td style="border:1px solid #EFE9E2; padding:10px;">${n}</td><td style="border:1px solid #EFE9E2; padding:10px;">${ch[i]}%</td><td style="border:1px solid #EFE9E2; padding:10px;">${getChakraStatus(ch[i])}</td></tr>`).join('');
+    let chakraTable = `<table style="width:100%; border-collapse:collapse; margin-top:12px;">
+        <thead>
+            <tr>
+                <th style="border:1px solid #EFE9E2; padding:10px; background:#F3EDE6; text-align:left;">Название чакры</th>
+                <th style="border:1px solid #EFE9E2; padding:10px; background:#F3EDE6; text-align:left;">Емкость чакры</th>
+                <th style="border:1px solid #EFE9E2; padding:10px; background:#F3EDE6; text-align:left;">Значение</th>
+            </tr>
+        </thead>
+        <tbody>${chakraRows}</tbody>
+    </table>`;
     
     let psychotypeName = ["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][pnum];
     
@@ -973,7 +984,7 @@ document.getElementById('mainPayBtn').onclick = () => {
     showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
 };
 
-// НОВАЯ ФУНКЦИЯ PDF ДЛЯ ПОРТРЕТА (аналогично беременности)
+// ФУНКЦИЯ PDF ДЛЯ ПОРТРЕТА
 function generateMainPDF() {
     const element = document.getElementById('mainResults');
     if (!element || element.innerHTML.includes('👉 Введите дату')) {
@@ -989,42 +1000,29 @@ function generateMainPDF() {
         <title>Нумерологический портрет</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: white; padding: 20px; line-height: 1.5; color: #1E1E1E; }
+            body { font-family: 'Inter', sans-serif; background: white; padding: 20px; line-height: 1.5; }
             .container { max-width: 800px; margin: 0 auto; }
-            h1 { font-size: 24px; border-bottom: 2px solid #F0EAE3; padding-bottom: 10px; margin-bottom: 15px; }
+            h1 { font-size: 24px; border-bottom: 2px solid #F0EAE3; padding-bottom: 10px; }
             .result-block { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #EFE9E2; }
             .result-block strong { font-size: 16px; display: block; margin-bottom: 8px; }
-            .full-text { background: #FAF8F5; padding: 12px; border-radius: 12px; margin-top: 8px; font-size: 14px; }
-            .chakra-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-            .chakra-table th, .chakra-table td { border: 1px solid #EFE9E2; padding: 8px; text-align: left; font-size: 13px; }
-            .chakra-table th { background: #F3EDE6; }
+            .full-text { background: #FAF8F5; padding: 12px; border-radius: 12px; margin-top: 8px; }
+            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background: #f0f0f0; }
             .periods-grid { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0; }
-            .period-card { background: #FAF8F5; padding: 12px; border-radius: 12px; flex: 1; min-width: 120px; text-align: center; }
-            .period-title { font-weight: 600; font-size: 14px; }
-            .period-age { font-size: 12px; color: #7A6E62; margin-top: 4px; }
-            .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #B0A396; border-top: 1px solid #EFE9E2; padding-top: 15px; }
+            .period-card { background: #FAF8F5; padding: 12px; border-radius: 12px; text-align: center; }
+            .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 15px; }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>🔮 Нумерологический портрет</h1>
             <p>Переберина Ольга — нумеролог-чакролог</p>
-            <p>Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
-            <div style="margin-top: 20px;">
-                ${element.innerHTML}
-            </div>
-            <div class="footer">
-                <p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p>
-            </div>
+            <p>Дата: ${new Date().toLocaleDateString('ru-RU')}</p>
+            <div style="margin-top: 20px;">${element.innerHTML}</div>
+            <div class="footer"><p>© Переберина Ольга | ai_numerolog@mail.ru</p></div>
         </div>
-        <script>
-            window.onload = function() {
-                setTimeout(function() {
-                    window.print();
-                    setTimeout(function() { window.close(); }, 1000);
-                }, 500);
-            };
-        <\/script>
+        <script>window.onload = function() { setTimeout(function() { window.print(); setTimeout(function() { window.close(); }, 1000); }, 500); };<\/script>
     </body>
     </html>`;
     
@@ -1033,7 +1031,6 @@ function generateMainPDF() {
     printWindow.document.close();
 }
 
-// НАЗНАЧАЕМ НОВЫЙ ОБРАБОТЧИК PDF
 document.getElementById('pdfDownloadBtn').onclick = generateMainPDF;
 // ============================================================================
 // 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
