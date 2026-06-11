@@ -1001,6 +1001,184 @@ const CARDS = [
         openTab('tab1');
     }
 })();
+    // ============================================================================
+// 23. ОСНОВНОЙ КАЛЬКУЛЯТОР (С ФОРМАТОМ X/Y)
+// ============================================================================
+let mainPaid = false;
+let currentMainData = null;
+
+function reduceToSingleDigit(n) {
+    while (n > 9) {
+        n = Math.floor(n / 10) + (n % 10);
+    }
+    return n === 0 ? 9 : n;
+}
+
+function getBaseNumber(dt) { let d=dt.getDate(), m=dt.getMonth()+1; let dm=(d<10?'0'+d:d)+''+(m<10?'0'+m:m); return (parseInt(dm)*dt.getFullYear()).toString(); }
+function getTypology(dt) { let s=dt.getDate()+dt.getMonth()+1+dt.getFullYear(); while(s>9) s=Math.floor(s/10)+(s%10); return s; }
+
+document.getElementById('calcMainBtn').onclick = () => {
+    let val = document.getElementById('birthMain').value;
+    if (!val) { alert("Введите дату"); return; }
+    let dt = new Date(val);
+    let ch = calculateChakras(dt);
+    let pnum = getLifePathNum(dt);
+    let prod = (dt.getDate() * 100 + dt.getMonth() + 1) * dt.getFullYear();
+    let dig = prod.toString();
+    
+    let pastFirst = parseInt(dig[0]) || 1;
+    let first = parseInt(dig[0]) || 0;
+    let last = parseInt(dig[dig.length - 1]) || 0;
+    let presFirst = (first + last) % 9;
+    if (presFirst === 0) presFirst = 9;
+    let rodFirst = (dt.getDate() + dt.getMonth() + 1) % 9;
+    if (rodFirst === 0) rodFirst = 9;
+    let parentsFirst = (rodFirst + presFirst) % 9;
+    if (parentsFirst === 0) parentsFirst = 9;
+    
+    let pastSecond = reduceToSingleDigit(pastFirst + pnum);
+    let presSecond = reduceToSingleDigit(presFirst + pnum);
+    let rodSecond = reduceToSingleDigit(rodFirst + pnum);
+    let parentsSecond = reduceToSingleDigit(parentsFirst + pnum);
+    
+    let pastDisplay = pastFirst + "/" + pastSecond;
+    let presDisplay = presFirst + "/" + presSecond;
+    let rodDisplay = rodFirst + "/" + rodSecond;
+    let parentsDisplay = parentsFirst + "/" + parentsSecond;
+    
+    // РАСЧЁТ ПЕРИОДОВ ЖИЗНИ
+    const prodStr = prod.toString();
+    let periods = prodStr.slice(1).slice(0, 6).split('').map(c => parseInt(c) || 0);
+    while (periods.length > 1 && periods[periods.length - 1] === 0) {
+        periods.pop();
+    }
+    const periodCount = periods.length;
+    let periodLength = 0;
+    if (periodCount === 5) {
+        periodLength = 15;
+    } else if (periodCount === 6) {
+        periodLength = 12;
+    } else if (periodCount === 4) {
+        periodLength = 20;
+    } else if (periodCount === 3) {
+        periodLength = 25;
+    } else {
+        periodLength = Math.floor(90 / periodCount);
+    }
+    const dynamicAgesList = [];
+    for (let i = 0; i < periodCount; i++) {
+        const start = i * periodLength;
+        const end = (i === periodCount - 1) ? `после ${start}` : `${start + periodLength}`;
+        if (i === periodCount - 1) {
+            dynamicAgesList.push(`${end} лет`);
+        } else {
+            dynamicAgesList.push(`${start}-${end} лет`);
+        }
+    }
+    let periodsHtml = `<div class="periods-grid">`;
+    for (let i = 0; i < periodCount; i++) {
+        periodsHtml += `<div class="period-card"><div class="period-title">${periods[i]} — ${periodShort[periods[i]]}</div><div class="period-age">${dynamicAgesList[i]}</div></div>`;
+    }
+    periodsHtml += `</div>`;
+    
+    currentMainData = { ch, pnum, rodFirst, pastFirst, presFirst, parentsFirst, periods, periodCount, dynamicAgesList, dt, rodDisplay, pastDisplay, presDisplay, parentsDisplay };
+    
+    let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
+    
+    let chakraRows = chakraNames.map((n,i) => `<tr><td style="border:1px solid #EFE9E2; padding:10px;">${n}</td><td style="border:1px solid #EFE9E2; padding:10px;">${ch[i]}%</td><td style="border:1px solid #EFE9E2; padding:10px;">${getChakraStatus(ch[i])}</td></td>`).join('');
+    let chakraTable = `<table style="width:100%; border-collapse:collapse; margin-top:12px;">
+        <thead>
+            <tr><th style="border:1px solid #EFE9E2; padding:10px; background:#F3EDE6; text-align:left;">Название чакры</th><th style="border:1px solid #EFE9E2; padding:10px; background:#F3EDE6; text-align:left;">Емкость чакры</th><th style="border:1px solid #EFE9E2; padding:10px; background:#F3EDE6; text-align:left;">Значение</th></tr></thead>
+        <tbody>${chakraRows}</tbody>
+    </table>`;
+    
+    let psychotypeName = ["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][pnum];
+    
+    const savedPaidBirth = localStorage.getItem('mainPaidBirth');
+    const isMainPaid = (savedPaidBirth === val) || (localStorage.getItem('mainPaid') === 'true' && mainPaid === true);
+    
+    if (isMainPaid) {
+        let chFullHtml = chakraNames.map((n,i) => `<div class="result-block"><strong>${n}: ${ch[i]}%</strong><div class="full-text">${chakraFull[n][getChakraStatus(ch[i])]}</div></div>`).join('');
+        let fullHtml = `<div class="result-block"><strong>🧠 Психотип:</strong> ${pnum} — ${psychotypeName}<div class="full-text">${psychotypesFull[pnum]}</div></div>
+                        ${chFullHtml}
+                        <div class="result-block"><strong>🏛 Задача рода:</strong> ${rodDisplay}<div class="full-text">${rodFull[rodFirst]}</div></div>
+                        <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${pastDisplay}<div class="full-text">${pastFull[pastFirst]}</div></div>
+                        <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${presDisplay}<div class="full-text">${presentFull[presFirst]}</div></div>
+                        <div class="result-block"><strong>👪 Задача родителей:</strong> ${parentsDisplay}<div class="full-text">${parentsFull[parentsFirst]}</div></div>
+                        <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periods.map((p,i)=>`<div>${p} — ${periodNames[p]} (${dynamicAgesList[i]})</div><div class="full-text">${periodsFull[p]}</div>`).join('')}</div>`;
+        document.getElementById('mainResults').innerHTML = fullHtml;
+        document.getElementById('pdfButtons').style.display = 'block';
+    } else {
+        document.getElementById('mainResults').innerHTML = `
+            <div class="result-block"><strong>🧠 Психотип:</strong> ${pnum} — ${psychotypeName}</div>
+            <div class="result-block"><strong>🌀 Чакры:</strong> ${chakraTable}</div>
+            <div class="result-block"><strong>🏛 Задача рода:</strong> ${rodDisplay} — ${rodShort[rodFirst]}</div>
+            <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${pastDisplay} — ${pastShort[pastFirst]}</div>
+            <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${presDisplay} — ${presentShort[presFirst]}</div>
+            <div class="result-block"><strong>👪 Задача родителей:</strong> ${parentsDisplay} — ${parentsShort[parentsFirst]}</div>
+            <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periodsHtml}</div>
+            <div style="margin-top:20px; padding:10px; background:#FFF3E0; border-radius:12px; text-align:center;">
+                🔓 Полная расшифровка откроется после оплаты. 
+                <button class="pay-btn" id="inlinePayBtn" style="margin-left:10px;">Оплатить 490₽</button>
+            </div>`;
+        document.getElementById('pdfButtons').style.display = 'none';
+        
+        const inlineBtn = document.getElementById('inlinePayBtn');
+        if(inlineBtn) {
+            inlineBtn.onclick = () => {
+                showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: val });
+            };
+        }
+    }
+};
+
+document.getElementById('mainPayBtn').onclick = () => {
+    if (mainPaid) return;
+    showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
+};
+
+document.getElementById('pdfDownloadBtn').onclick = () => {
+    const element = document.getElementById('mainResults');
+    if (!element || element.innerHTML.includes('👉 Введите дату')) {
+        alert("Сначала рассчитайте расшифровку!");
+        return;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><title>Нумерологический портрет</title>
+        <style>
+            *{margin:0;padding:0;box-sizing:border-box;}
+            body{font-family:'Inter',sans-serif;background:white;padding:40px;line-height:1.5;}
+            .container{max-width:800px;margin:0 auto;}
+            h1{font-size:28px;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:20px;}
+            .result-block{margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #ddd;}
+            .result-block strong{font-size:18px;display:block;margin-bottom:10px;}
+            .full-text{background:#f5f5f5;padding:15px;border-radius:10px;margin-top:10px;}
+            table{width:100%;border-collapse:collapse;margin:15px 0;}
+            th,td{border:1px solid #ddd;padding:10px;text-align:left;}
+            th{background:#f0f0f0;}
+            .periods-grid{display:flex;flex-wrap:wrap;gap:15px;margin:15px 0;}
+            .period-card{background:#f9f9f9;padding:15px;border-radius:10px;text-align:center;flex:1;min-width:100px;}
+            .footer{margin-top:40px;text-align:center;font-size:12px;color:#999;border-top:1px solid #ddd;padding-top:20px;}
+        </style>
+        </head>
+        <body>
+        <div class="container">
+            <h1>🔮 Нумерологический портрет</h1>
+            <p>Переберина Ольга — нумеролог-чакролог</p>
+            <p>Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
+            <div style="margin-top:20px;">${element.innerHTML}</div>
+            <div class="footer"><p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p></div>
+        </div>
+        <script>window.onload = function() { setTimeout(function() { window.print(); setTimeout(function() { window.close(); }, 1000); }, 500); };</script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+};
 // ============================================================================
 // 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
 // ============================================================================
