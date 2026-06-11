@@ -1359,7 +1359,7 @@ function getCompatibilityStatus(chakraName, maleVal, femaleVal) {
         Аджна: { stronger: "female", condition: (m,f) => f > m + 20 }
     };
     let rule = normalRules[chakraName];
-    if(maleVal <=30 && femaleVal <=30) return { type: "critical" };
+    if(maleVal <=35 && femaleVal <=35) return { type: "critical" };
     if(Math.abs(maleVal-femaleVal) <=19 && maleVal>40 && femaleVal>40) return { type: "ideal" };
     if(rule.condition(maleVal,femaleVal)) return { type: "normal" };
     return { type: "imbalance" };
