@@ -169,19 +169,14 @@
                 <h3>💰 Гайд «Все о твоих финансах»</h3>
                 <div class="price">990₽</div>
                 <div class="description">
-                    <strong>Что такое денежный код</strong><br>
-                    Денежный код — комбинация из 4 цифр по дате рождения. Показывает, через что приходят деньги и что их блокирует.
-                    <br><br>
-                    <strong>Как использовать:</strong><br>
-                    • Запишите на стикер<br>
-                    • Положите в кошелёк<br>
-                    • Используйте как пароль<br>
-                    • Повторяйте вслух по утрам
-                    <br><br>
-                    <strong>Правило:</strong> Не рассказывайте код другим.
-                </div>
-                <button class="shop-btn" data-product="Гайд «Все о твоих финансах»" data-price="990">Купить гайд</button>
-            </div>
+   Узнай все о твоем финансовом коде!
+    Благодаря этому гайду ты узнаешь:<br>
+    • Есть ли у тебя энергетические блоки, которые тебе мешают вырасти в деньгах и как с ними работать<br>
+    • Через что тебе приходят деньги<br>
+    • Какие тебе нужно делать действия и какие усилия приложить, чтобы активировать денежный канал<br>
+    • В каких сферах ты можешь реализоваться<br>
+    • Какие действия блокирует твои финансы и что делать, чтобы убрать эти блоки
+</div>
         </div>
     </div>
 </div>
@@ -925,17 +920,27 @@ document.getElementById('calcMainBtn').onclick = () => {
     let prod = (dt.getDate() * 100 + dt.getMonth() + 1) * dt.getFullYear();
     let dig = prod.toString();
     
+    // ========== РАСЧЁТ ЗАДАЧ (ИСПРАВЛЕННЫЙ) ==========
     let pastFirst = parseInt(dig[0]) || 1;
     let first = parseInt(dig[0]) || 0;
     let last = parseInt(dig[dig.length - 1]) || 0;
-    let presFirst = (first + last) % 9 || 9;
-    let rodFirst = (dt.getDate() + dt.getMonth() + 1) % 9 || 9;
-    let parentsFirst = (rodFirst + presFirst) % 9 || 9;
+    let presFirst = (first + last) % 9;
+    if (presFirst === 0) presFirst = 9;
+    let rodFirst = (dt.getDate() + dt.getMonth() + 1) % 9;
+    if (rodFirst === 0) rodFirst = 9;
+    let parentsFirst = (rodFirst + presFirst) % 9;
+    if (parentsFirst === 0) parentsFirst = 9;
     
     let pastSecond = reduceToSingleDigit(pastFirst + pnum);
     let presSecond = reduceToSingleDigit(presFirst + pnum);
     let rodSecond = reduceToSingleDigit(rodFirst + pnum);
     let parentsSecond = reduceToSingleDigit(parentsFirst + pnum);
+    
+    // Гарантируем однозначное число 1-9
+    if (pastSecond === 0) pastSecond = 9;
+    if (presSecond === 0) presSecond = 9;
+    if (rodSecond === 0) rodSecond = 9;
+    if (parentsSecond === 0) parentsSecond = 9;
     
     let pastDisplay = pastFirst + "/" + pastSecond;
     let presDisplay = presFirst + "/" + presSecond;
@@ -981,7 +986,7 @@ document.getElementById('calcMainBtn').onclick = () => {
     
     let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
     
-    // ИСПРАВЛЕННАЯ ТАБЛИЦА ЧАКР
+    // ТАБЛИЦА ЧАКР
     let chakraRows = chakraNames.map((n,i) => `<tr><td style="border:1px solid #EFE9E2; padding:10px;">${n}</td><td style="border:1px solid #EFE9E2; padding:10px;">${ch[i]}%</td><td style="border:1px solid #EFE9E2; padding:10px;">${getChakraStatus(ch[i])}</td></tr>`).join('');
     let chakraTable = `<table style="width:100%; border-collapse:collapse; margin-top:12px;">
         <thead>
@@ -1039,7 +1044,7 @@ document.getElementById('mainPayBtn').onclick = () => {
     showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
 };
 
-// ИСПРАВЛЕННАЯ ФУНКЦИЯ PDF ДЛЯ ПОРТРЕТА (РАБОТАЕТ КАК В БЕРЕМЕННОСТИ)
+// PDF ДЛЯ ПОРТРЕТА
 document.getElementById('pdfDownloadBtn').onclick = () => {
     const element = document.getElementById('mainResults');
     if (!element || element.innerHTML.includes('👉 Введите дату')) {
@@ -1047,7 +1052,6 @@ document.getElementById('pdfDownloadBtn').onclick = () => {
         return;
     }
     
-    // Просто копируем содержимое в новое окно и открываем печать
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
         <!DOCTYPE html>
