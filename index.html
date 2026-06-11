@@ -145,42 +145,47 @@
     <!-- КАЛЬКУЛЯТОР 4 - ЛИЧНЫЙ ПРОГНОЗ -->
     <div id="tab4" class="calculator-panel"><h2>🔮 Личный прогноз по годам и дням</h2><div class="input-group"><div class="input-field"><label>📅 Дата рождения</label><input type="date" id="birthForecast"></div><button class="calc-action" id="calcForecastBtn">Рассчитать</button></div><div id="forecastResults" style="display:none;"></div><div id="forecastPayWall" style="display:none; text-align:center;"><button class="pay-btn" id="forecastPayBtn">🔓 Расшифровка прогноза за 1490₽ <span class="old-price">3500₽</span></button></div></div>
 
-  <!-- НОВАЯ ВКЛАДКА 7 - ДЕНЕЖНЫЙ КОД -->
+ <!-- НОВАЯ ВКЛАДКА 7 - ДЕНЕЖНЫЙ КОД -->
 <div id="tab7" class="calculator-panel">
     <div class="two-columns">
         <div class="main-col">
-            <h2>💰 Твой денежный код</h2>
-            <div class="input-group">
-                <div class="input-field">
-                    <label>📅 Дата рождения</label>
-                    <input type="date" id="birthMoneyCode">
-                </div>
-                <button class="calc-action" id="calcMoneyCodeBtn">Рассчитать</button>
-            </div>
-            <div id="moneyCodeResults" class="results-area">👉 Введите дату и нажмите «Рассчитать»</div>
-            <div id="moneyPayWall" style="display:none; text-align:center; margin-top:20px;">
-                <button class="pay-btn" id="moneyPayBtn">🔓 Полная расшифровка прогноза за 290₽ <span class="old-price">590₽</span></button>
-            </div>
-            <div class="disclaimer">⚠️ Данные материалы не являются финансовой консультацией.</div>
-        </div>
-        <div class="sidebar-col">
-            <!-- ОПИСАНИЕ ЧТО ТАКОЕ ДЕНЕЖНЫЙ КОД И КАК ИСПОЛЬЗОВАТЬ -->
-            <div class="offer-card">
-                <h3>✨ Что такое денежный код</h3>
-                <p style="font-size:0.85rem; margin-bottom:12px;">Денежный код — это комбинация из 4 цифр, которая рассчитывается по дате рождения человека. Показывает, через что именно к человеку приходят деньги и какие действия блокируют финансовый поток.</p>
-                <p style="font-size:0.85rem; margin-bottom:12px;">У каждого человека — свой код. Он не меняется в течение жизни.</p>
-                <p style="font-size:0.85rem; margin-bottom:8px;"><strong>📌 Как использовать:</strong></p>
-                <ul style="margin-left:20px; font-size:0.8rem; color:#4A3F35;">
+            <div style="background:#FFFFFF; border-radius:32px; padding:24px; margin-bottom:32px; border:1px solid #F0EAE3;">
+                <h2>✨ Что такое денежный код</h2>
+                <p>Денежный код — это комбинация из 4 цифр, которая рассчитывается по дате рождения человека. Показывает, через что именно к человеку приходят деньги и какие действия блокируют финансовый поток.</p>
+                <p>У каждого человека — свой код. Он не меняется в течение жизни.</p>
+                
+                <h3>📌 Как использовать</h3>
+                <ul style="margin-left:20px; margin-bottom:16px;">
                     <li>Запишите на стикер и приклейте на видное место</li>
                     <li>Положите в кошелёк, в отделение для купюр</li>
                     <li>Используйте как пароль или PIN-код</li>
                     <li>Напишите на купюре-талисмане и не тратьте</li>
                     <li>Каждое утро произносите код три раза</li>
                 </ul>
-                <p style="font-size:0.75rem; color:#B0A396; margin-top:12px; padding-top:8px; border-top:1px solid #EAE5DF;">🔒 Не рассказывайте свой денежный код другим людям.</p>
+                
+                <div style="background:#FFF8E7; border-left:4px solid #F5A623; padding:16px; border-radius:12px;">
+                    <p>🔒 <strong>Важное правило:</strong> Не рассказывайте свой денежный код другим людям.</p>
+                </div>
             </div>
-            
-            <!-- ГАЙД "ВСЕ О ТВОИХ ФИНАНСАХ" С КНОПКОЙ -->
+
+            <div style="background:#FFFFFF; border-radius:32px; padding:24px; margin-bottom:32px; border:1px solid #F0EAE3;">
+                <h2>🔢 Рассчитай свой денежный код</h2>
+                <div class="input-group">
+                    <div class="input-field">
+                        <label>📅 Дата рождения</label>
+                        <input type="date" id="birthMoneyCode">
+                    </div>
+                    <button class="calc-action" id="calcMoneyCodeBtn">Рассчитать</button>
+                </div>
+                <div id="moneyCodeResults" class="results-area">👉 Введите дату и нажмите «Рассчитать»</div>
+                <div id="moneyPayWall" style="display:none; text-align:center; margin-top:20px;">
+                    <button class="pay-btn" id="moneyPayBtn">🔓 Полная расшифровка прогноза за 290₽ <span class="old-price">590₽</span></button>
+                </div>
+                <div class="disclaimer">⚠️ Данные материалы не являются финансовой консультацией.</div>
+            </div>
+        </div>
+        
+        <div class="sidebar-col">
             <div class="offer-card">
                 <img src="https://raw.githubusercontent.com/olgapereberina19-code/gid/main/Обложка%20Все%20о%20твоих%20финансах.png">
                 <h3>💰 Гайд «Все о твоих финансах»</h3>
@@ -238,21 +243,21 @@
     }
     
     if (paid === '1') {
-        // УСТАНАВЛИВАЕМ ФЛАГИ ТОЛЬКО ДЛЯ ОПЛАЧЕННОГО ТОВАРА
+        // УСТАНАВЛИВАЕМ ФЛАГИ ДЛЯ ОПЛАЧЕННОГО ТОВАРА
         if (tab === 'forecast') {
             localStorage.setItem('forecastPaid', 'true');
             const savedYear = localStorage.getItem('forecastYear');
-            if (savedYear) {
-                localStorage.setItem('forecastPaidYear', savedYear);
-            }
+            if (savedYear) localStorage.setItem('forecastPaidYear', savedYear);
         } else if (tab === 'preg') {
             localStorage.setItem('pregPaid', 'true');
             const savedYear = localStorage.getItem('pregYear');
-            if (savedYear) {
-                localStorage.setItem('pregPaidYear', savedYear);
-            }
+            if (savedYear) localStorage.setItem('pregPaidYear', savedYear);
         } else if (tab === 'compat') {
             localStorage.setItem('compatPaid', 'true');
+        } else if (tab === 'money') {
+            localStorage.setItem('moneyPaid', 'true');
+            const savedYear = localStorage.getItem('moneyYear');
+            if (savedYear) localStorage.setItem('moneyPaidYear', savedYear);
         } else {
             localStorage.setItem('mainPaid', 'true');
         }
@@ -269,98 +274,67 @@
         } else if (tab === 'compat') {
             targetTab = 'tab3';
             serviceName = 'расшифровку совместимости';
-        } else if(currentPayment.type === 'money'){
-    let birth = document.getElementById('modalBirth')?.value;
-    let year = document.getElementById('modalYear')?.value;
-    if(!birth || !year){ alert("Подтвердите дату и год"); return; }
-    localStorage.setItem('moneyBirth', birth);
-    localStorage.setItem('moneyYear', year);
-    localStorage.setItem('moneyPaid', 'true');
-}
+        } else if (tab === 'money') {
+            targetTab = 'tab7';
+            serviceName = 'финансовый прогноз';
+        }
         
-        // ОТКРЫВАЕМ ВКЛАДКУ
         openTab(targetTab);
         
-        // ПОКАЗЫВАЕМ СООБЩЕНИЕ
         setTimeout(() => {
             alert(`✅ Оплата прошла успешно!\n\nВаша ${serviceName} теперь открыта.`);
         }, 500);
         
-        // ДЛЯ ПРОГНОЗА: подставляем дату и запускаем расчёт
         if (tab === 'forecast') {
             const savedBirth = localStorage.getItem('forecastBirth');
             const savedYear = localStorage.getItem('forecastYear');
-            
             const observer = new MutationObserver(function(mutations) {
                 const tab4 = document.getElementById('tab4');
                 if (tab4 && tab4.classList.contains('active-panel')) {
                     observer.disconnect();
-                    
-                    if (savedBirth) {
-                        document.getElementById('birthForecast').value = savedBirth;
-                    }
-                    if (savedYear) {
-                        forecastPaid = true;
-                        forecastPaidYear = parseInt(savedYear);
-                    }
-                    
+                    if (savedBirth) document.getElementById('birthForecast').value = savedBirth;
+                    if (savedYear) { forecastPaid = true; forecastPaidYear = parseInt(savedYear); }
                     const calcBtn = document.getElementById('calcForecastBtn');
-                    if (calcBtn) {
-                        calcBtn.click();
-                        setTimeout(() => {
-                            if (forecastPaidYear) {
-                                renderForecast(forecastPaidYear);
-                            }
-                        }, 500);
-                    }
+                    if (calcBtn) { calcBtn.click(); setTimeout(() => { if (forecastPaidYear) renderForecast(forecastPaidYear); }, 500); }
                 }
             });
-            
             observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
-            
             setTimeout(() => {
                 observer.disconnect();
-                if (savedBirth) {
-                    document.getElementById('birthForecast').value = savedBirth;
-                }
-                if (savedYear) {
-                    forecastPaid = true;
-                    forecastPaidYear = parseInt(savedYear);
-                }
+                if (savedBirth) document.getElementById('birthForecast').value = savedBirth;
+                if (savedYear) { forecastPaid = true; forecastPaidYear = parseInt(savedYear); }
                 const calcBtn = document.getElementById('calcForecastBtn');
                 if (calcBtn) calcBtn.click();
             }, 2000);
         } else if (tab === 'preg') {
             const savedBirth = localStorage.getItem('pregBirth');
-            setTimeout(() => {
-                if (savedBirth) {
-                    document.getElementById('birthPreg').value = savedBirth;
-                    document.getElementById('calcPregBtn').click();
-                }
-            }, 500);
+            setTimeout(() => { if (savedBirth) { document.getElementById('birthPreg').value = savedBirth; document.getElementById('calcPregBtn').click(); } }, 500);
         } else if (tab === 'compat') {
             const savedMale = localStorage.getItem('compatMale');
             const savedFemale = localStorage.getItem('compatFemale');
+            setTimeout(() => { if (savedMale && savedFemale) { document.getElementById('birthMale').value = savedMale; document.getElementById('birthFemale').value = savedFemale; document.getElementById('calcCompatBtn').click(); } }, 500);
+        } else if (tab === 'money') {
+            const savedBirth = localStorage.getItem('moneyBirth');
+            const savedYear = localStorage.getItem('moneyYear');
             setTimeout(() => {
-                if (savedMale && savedFemale) {
-                    document.getElementById('birthMale').value = savedMale;
-                    document.getElementById('birthFemale').value = savedFemale;
-                    document.getElementById('calcCompatBtn').click();
+                if (savedBirth) {
+                    document.getElementById('birthMoneyCode').value = savedBirth;
+                    const calcBtn = document.getElementById('calcMoneyCodeBtn');
+                    if (calcBtn) calcBtn.click();
+                    setTimeout(() => {
+                        if (savedYear && typeof currentMoneyYear !== 'undefined') {
+                            currentMoneyYear = parseInt(savedYear);
+                            if (typeof renderMoneyResults === 'function') renderMoneyResults();
+                        }
+                    }, 500);
                 }
             }, 500);
         } else {
             const savedBirth = localStorage.getItem('mainBirth');
-            setTimeout(() => {
-                if (savedBirth) {
-                    document.getElementById('birthMain').value = savedBirth;
-                    document.getElementById('calcMainBtn').click();
-                }
-            }, 500);
+            setTimeout(() => { if (savedBirth) { document.getElementById('birthMain').value = savedBirth; document.getElementById('calcMainBtn').click(); } }, 500);
         }
         
-        setTimeout(() => {
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }, 2000);
+        setTimeout(() => { window.history.replaceState({}, document.title, window.location.pathname); }, 2000);
     } else {
         openTab('tab1');
     }
@@ -914,211 +888,119 @@ const CARDS = [
 ];
 
 // ============================================================================
-// 23. ОСНОВНОЙ КАЛЬКУЛЯТОР (С ФОРМАТОМ X/Y)
+// АВТОМАТИЧЕСКОЕ ОТКРЫТИЕ ПОСЛЕ ОПЛАТЫ
 // ============================================================================
-let mainPaid = false;
-let currentMainData = null;
-
-function reduceToSingleDigit(n) {
-    if (n === 11 || n === 22 || n === 33) return n;
-    while (n > 9 && n !== 11 && n !== 22 && n !== 33) {
-        n = Math.floor(n / 10) + (n % 10);
+(function autoOpenAfterPayment() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paid = urlParams.get('paid');
+    const tab = urlParams.get('tab');
+    
+    function openTab(tabId) {
+        document.querySelectorAll('.calculator-panel').forEach(p => p.classList.remove('active-panel'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const targetPanel = document.getElementById(tabId);
+        if (targetPanel) targetPanel.classList.add('active-panel');
+        const targetBtn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+        if (targetBtn) targetBtn.classList.add('active');
     }
-    return n;
-}
-
-function getBaseNumber(dt) { let d=dt.getDate(), m=dt.getMonth()+1; let dm=(d<10?'0'+d:d)+''+(m<10?'0'+m:m); return (parseInt(dm)*dt.getFullYear()).toString(); }
-function getTypology(dt) { let s=dt.getDate()+dt.getMonth()+1+dt.getFullYear(); while(s>9) s=Math.floor(s/10)+(s%10); return s; }
-
-document.getElementById('calcMainBtn').onclick = () => {
-    let val = document.getElementById('birthMain').value;
-    if (!val) { alert("Введите дату"); return; }
-    let dt = new Date(val);
-    let ch = calculateChakras(dt);
-    let pnum = getLifePathNum(dt);
-    let prod = (dt.getDate() * 100 + dt.getMonth() + 1) * dt.getFullYear();
-    let dig = prod.toString();
     
-    // ========== РАСЧЁТ ЗАДАЧ (ИСПРАВЛЕННЫЙ) ==========
-    let pastFirst = parseInt(dig[0]) || 1;
-    let first = parseInt(dig[0]) || 0;
-    let last = parseInt(dig[dig.length - 1]) || 0;
-    let presFirst = (first + last) % 9;
-    if (presFirst === 0) presFirst = 9;
-    let rodFirst = (dt.getDate() + dt.getMonth() + 1) % 9;
-    if (rodFirst === 0) rodFirst = 9;
-    let parentsFirst = (rodFirst + presFirst) % 9;
-    if (parentsFirst === 0) parentsFirst = 9;
-    
-    let pastSecond = reduceToSingleDigit(pastFirst + pnum);
-    let presSecond = reduceToSingleDigit(presFirst + pnum);
-    let rodSecond = reduceToSingleDigit(rodFirst + pnum);
-    let parentsSecond = reduceToSingleDigit(parentsFirst + pnum);
-    
-    // Гарантируем однозначное число 1-9
-    if (pastSecond === 0) pastSecond = 9;
-    if (presSecond === 0) presSecond = 9;
-    if (rodSecond === 0) rodSecond = 9;
-    if (parentsSecond === 0) parentsSecond = 9;
-    
-    let pastDisplay = pastFirst + "/" + pastSecond;
-    let presDisplay = presFirst + "/" + presSecond;
-    let rodDisplay = rodFirst + "/" + rodSecond;
-    let parentsDisplay = parentsFirst + "/" + parentsSecond;
-    
-    // РАСЧЁТ ПЕРИОДОВ ЖИЗНИ
-    const prodStr = prod.toString();
-    let periods = prodStr.slice(1).slice(0, 6).split('').map(c => parseInt(c) || 0);
-    while (periods.length > 1 && periods[periods.length - 1] === 0) {
-        periods.pop();
-    }
-    const periodCount = periods.length;
-    let periodLength = 0;
-    if (periodCount === 5) {
-        periodLength = 15;
-    } else if (periodCount === 6) {
-        periodLength = 12;
-    } else if (periodCount === 4) {
-        periodLength = 20;
-    } else if (periodCount === 3) {
-        periodLength = 25;
-    } else {
-        periodLength = Math.floor(90 / periodCount);
-    }
-    const dynamicAgesList = [];
-    for (let i = 0; i < periodCount; i++) {
-        const start = i * periodLength;
-        const end = (i === periodCount - 1) ? `после ${start}` : `${start + periodLength}`;
-        if (i === periodCount - 1) {
-            dynamicAgesList.push(`${end} лет`);
+    if (paid === '1') {
+        // УСТАНАВЛИВАЕМ ФЛАГИ ДЛЯ ОПЛАЧЕННОГО ТОВАРА
+        if (tab === 'forecast') {
+            localStorage.setItem('forecastPaid', 'true');
+            const savedYear = localStorage.getItem('forecastYear');
+            if (savedYear) localStorage.setItem('forecastPaidYear', savedYear);
+        } else if (tab === 'preg') {
+            localStorage.setItem('pregPaid', 'true');
+            const savedYear = localStorage.getItem('pregYear');
+            if (savedYear) localStorage.setItem('pregPaidYear', savedYear);
+        } else if (tab === 'compat') {
+            localStorage.setItem('compatPaid', 'true');
+        } else if (tab === 'money') {
+            localStorage.setItem('moneyPaid', 'true');
+            const savedYear = localStorage.getItem('moneyYear');
+            if (savedYear) localStorage.setItem('moneyPaidYear', savedYear);
         } else {
-            dynamicAgesList.push(`${start}-${end} лет`);
+            localStorage.setItem('mainPaid', 'true');
         }
-    }
-    let periodsHtml = `<div class="periods-grid">`;
-    for (let i = 0; i < periodCount; i++) {
-        periodsHtml += `<div class="period-card"><div class="period-title">${periods[i]} — ${periodShort[periods[i]]}</div><div class="period-age">${dynamicAgesList[i]}</div></div>`;
-    }
-    periodsHtml += `</div>`;
-    
-    currentMainData = { ch, pnum, rodFirst, pastFirst, presFirst, parentsFirst, periods, periodCount, dynamicAgesList, dt, rodDisplay, pastDisplay, presDisplay, parentsDisplay };
-    
-    let chakraNames = ["Муладхара","Свадхистана","Манипура","Анахата","Вишудха","Аджна"];
-    
-    // ТАБЛИЦА ЧАКР
-    let chakraRows = chakraNames.map((n,i) => `<tr><td style="border:1px solid #EFE9E2; padding:10px;">${n}</td><td style="border:1px solid #EFE9E2; padding:10px;">${ch[i]}%</td><td style="border:1px solid #EFE9E2; padding:10px;">${getChakraStatus(ch[i])}</td></tr>`).join('');
-    let chakraTable = `<table style="width:100%; border-collapse:collapse; margin-top:12px;">
-        <thead>
-            <tr>
-                <th style="border:1px solid #EFE9E2; padding:10px; background:#F3EDE6; text-align:left;">Название чакры</th>
-                <th style="border:1px solid #EFE9E2; padding:10px; background:#F3EDE6; text-align:left;">Емкость чакры</th>
-                <th style="border:1px solid #EFE9E2; padding:10px; background:#F3EDE6; text-align:left;">Значение</th>
-            </tr>
-        </thead>
-        <tbody>${chakraRows}</tbody>
-    </table>`;
-    
-    let psychotypeName = ["","Первопроходец","Гармонизатор","Вдохновитель","Строитель","Авантюрист","Наставник","Исследователь","Стратег","Проводник"][pnum];
-    
-    const savedPaidBirth = localStorage.getItem('mainPaidBirth');
-    const isMainPaid = (savedPaidBirth === val) || (localStorage.getItem('mainPaid') === 'true' && mainPaid === true);
-    
-    if (isMainPaid) {
-        let chFullHtml = chakraNames.map((n,i) => `<div class="result-block"><strong>${n}: ${ch[i]}%</strong><div class="full-text">${chakraFull[n][getChakraStatus(ch[i])]}</div></div>`).join('');
-        let fullHtml = `<div class="result-block"><strong>🧠 Психотип:</strong> ${pnum} — ${psychotypeName}<div class="full-text">${psychotypesFull[pnum]}</div></div>
-                        ${chFullHtml}
-                        <div class="result-block"><strong>🏛 Задача рода:</strong> ${rodDisplay}<div class="full-text">${rodFull[rodFirst]}</div></div>
-                        <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${pastDisplay}<div class="full-text">${pastFull[pastFirst]}</div></div>
-                        <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${presDisplay}<div class="full-text">${presentFull[presFirst]}</div></div>
-                        <div class="result-block"><strong>👪 Задача родителей:</strong> ${parentsDisplay}<div class="full-text">${parentsFull[parentsFirst]}</div></div>
-                        <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periods.map((p,i)=>`<div>${p} — ${periodNames[p]} (${dynamicAgesList[i]})</div><div class="full-text">${periodsFull[p]}</div>`).join('')}</div>`;
-        document.getElementById('mainResults').innerHTML = fullHtml;
-        document.getElementById('pdfButtons').style.display = 'block';
-    } else {
-        document.getElementById('mainResults').innerHTML = `
-            <div class="result-block"><strong>🧠 Психотип:</strong> ${pnum} — ${psychotypeName}</div>
-            <div class="result-block"><strong>🌀 Чакры:</strong> ${chakraTable}</div>
-            <div class="result-block"><strong>🏛 Задача рода:</strong> ${rodDisplay} — ${rodShort[rodFirst]}</div>
-            <div class="result-block"><strong>🕯 Задача прошлого:</strong> ${pastDisplay} — ${pastShort[pastFirst]}</div>
-            <div class="result-block"><strong>🌙 Задача настоящего:</strong> ${presDisplay} — ${presentShort[presFirst]}</div>
-            <div class="result-block"><strong>👪 Задача родителей:</strong> ${parentsDisplay} — ${parentsShort[parentsFirst]}</div>
-            <div class="result-block"><strong>📆 Периоды жизни:</strong> ${periodsHtml}</div>
-            <div style="margin-top:20px; padding:10px; background:#FFF3E0; border-radius:12px; text-align:center;">
-                🔓 Полная расшифровка откроется после оплаты. 
-                <button class="pay-btn" id="inlinePayBtn" style="margin-left:10px;">Оплатить 490₽</button>
-            </div>`;
-        document.getElementById('pdfButtons').style.display = 'none';
         
-        const inlineBtn = document.getElementById('inlinePayBtn');
-        if(inlineBtn) {
-            inlineBtn.onclick = () => {
-                showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: val });
-            };
+        let targetTab = 'tab1';
+        let serviceName = 'нумерологический портрет';
+        
+        if (tab === 'forecast') {
+            targetTab = 'tab4';
+            serviceName = 'личный прогноз';
+        } else if (tab === 'preg') {
+            targetTab = 'tab2';
+            serviceName = 'прогноз беременности';
+        } else if (tab === 'compat') {
+            targetTab = 'tab3';
+            serviceName = 'расшифровку совместимости';
+        } else if (tab === 'money') {
+            targetTab = 'tab7';
+            serviceName = 'финансовый прогноз';
         }
-    }
-};
-
-document.getElementById('mainPayBtn').onclick = () => {
-    if (mainPaid) return;
-    showPaymentModal("Расшифровка нумерологического портрета", 490, "main", { birth: document.getElementById('birthMain').value });
-};
-
-// PDF ДЛЯ ПОРТРЕТА
-document.getElementById('pdfDownloadBtn').onclick = () => {
-    const element = document.getElementById('mainResults');
-    if (!element || element.innerHTML.includes('👉 Введите дату')) {
-        alert("Сначала рассчитайте расшифровку!");
-        return;
-    }
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Нумерологический портрет</title>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: 'Inter', sans-serif; background: white; padding: 40px; line-height: 1.5; }
-                .container { max-width: 800px; margin: 0 auto; }
-                h1 { font-size: 28px; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-                .result-block { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #ddd; }
-                .result-block strong { font-size: 18px; display: block; margin-bottom: 10px; }
-                .full-text { background: #f5f5f5; padding: 15px; border-radius: 10px; margin-top: 10px; }
-                table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-                th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-                th { background: #f0f0f0; }
-                .periods-grid { display: flex; flex-wrap: wrap; gap: 15px; margin: 15px 0; }
-                .period-card { background: #f9f9f9; padding: 15px; border-radius: 10px; text-align: center; flex: 1; min-width: 100px; }
-                .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🔮 Нумерологический портрет</h1>
-                <p>Переберина Ольга — нумеролог-чакролог</p>
-                <p>Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p>
-                <div style="margin-top:20px;">
-                    ${element.innerHTML}
-                </div>
-                <div class="footer">
-                    <p>© Переберина Ольга | ИНН 780440939257 | ai_numerolog@mail.ru</p>
-                </div>
-            </div>
-            <script>
-                window.onload = function() {
-                    setTimeout(function() {
-                        window.print();
-                        setTimeout(function() { window.close(); }, 1000);
+        
+        openTab(targetTab);
+        
+        setTimeout(() => {
+            alert(`✅ Оплата прошла успешно!\n\nВаша ${serviceName} теперь открыта.`);
+        }, 500);
+        
+        if (tab === 'forecast') {
+            const savedBirth = localStorage.getItem('forecastBirth');
+            const savedYear = localStorage.getItem('forecastYear');
+            const observer = new MutationObserver(function(mutations) {
+                const tab4 = document.getElementById('tab4');
+                if (tab4 && tab4.classList.contains('active-panel')) {
+                    observer.disconnect();
+                    if (savedBirth) document.getElementById('birthForecast').value = savedBirth;
+                    if (savedYear) { forecastPaid = true; forecastPaidYear = parseInt(savedYear); }
+                    const calcBtn = document.getElementById('calcForecastBtn');
+                    if (calcBtn) { calcBtn.click(); setTimeout(() => { if (forecastPaidYear) renderForecast(forecastPaidYear); }, 500); }
+                }
+            });
+            observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+            setTimeout(() => {
+                observer.disconnect();
+                if (savedBirth) document.getElementById('birthForecast').value = savedBirth;
+                if (savedYear) { forecastPaid = true; forecastPaidYear = parseInt(savedYear); }
+                const calcBtn = document.getElementById('calcForecastBtn');
+                if (calcBtn) calcBtn.click();
+            }, 2000);
+        } else if (tab === 'preg') {
+            const savedBirth = localStorage.getItem('pregBirth');
+            setTimeout(() => { if (savedBirth) { document.getElementById('birthPreg').value = savedBirth; document.getElementById('calcPregBtn').click(); } }, 500);
+        } else if (tab === 'compat') {
+            const savedMale = localStorage.getItem('compatMale');
+            const savedFemale = localStorage.getItem('compatFemale');
+            setTimeout(() => { if (savedMale && savedFemale) { document.getElementById('birthMale').value = savedMale; document.getElementById('birthFemale').value = savedFemale; document.getElementById('calcCompatBtn').click(); } }, 500);
+        } else if (tab === 'money') {
+            const savedBirth = localStorage.getItem('moneyBirth');
+            const savedYear = localStorage.getItem('moneyYear');
+            setTimeout(() => {
+                if (savedBirth) {
+                    document.getElementById('birthMoneyCode').value = savedBirth;
+                    const calcBtn = document.getElementById('calcMoneyCodeBtn');
+                    if (calcBtn) calcBtn.click();
+                    setTimeout(() => {
+                        if (savedYear && typeof currentMoneyYear !== 'undefined') {
+                            currentMoneyYear = parseInt(savedYear);
+                            if (typeof renderMoneyResults === 'function') renderMoneyResults();
+                        }
                     }, 500);
-                };
-            <\/script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-};
+                }
+            }, 500);
+        } else {
+            const savedBirth = localStorage.getItem('mainBirth');
+            setTimeout(() => { if (savedBirth) { document.getElementById('birthMain').value = savedBirth; document.getElementById('calcMainBtn').click(); } }, 500);
+        }
+        
+        setTimeout(() => { window.history.replaceState({}, document.title, window.location.pathname); }, 2000);
+    } else {
+        openTab('tab1');
+    }
+})();
 // ============================================================================
 // 24. КАЛЬКУЛЯТОР БЕРЕМЕННОСТИ
 // ============================================================================
@@ -1675,6 +1557,7 @@ function showPaymentModal(name, price, type, extra = null) {
     document.getElementById('modalTitle').innerText = type === 'guide' ? '💳 Оформление заказа' : '💳 Оплата расшифровки';
     document.getElementById('modalProductInfo').innerHTML = `<strong>${name}</strong><br>Стоимость: ${price}₽`;
     let extraHtml = '', footnote = '';
+    
     if(type === 'guide'){
         extraHtml = '';
         footnote = 'Вы будете перенаправлены на страницу оплаты.';
@@ -1690,7 +1573,11 @@ function showPaymentModal(name, price, type, extra = null) {
     } else if(type === 'forecast'){
         extraHtml = `<div class="modal-field"><label>📅 Подтвердите дату рождения</label><input type="date" id="modalBirth" value="${extra?.birth || ''}" required></div><div class="modal-field"><label>📅 Подтвердите нужный год</label><input type="number" id="modalYear" value="${extra?.year || ''}" required></div>`;
         footnote = 'Прогноз на год, месяцы и дни.';
+    } else if(type === 'money'){
+        extraHtml = `<div class="modal-field"><label>📅 Подтвердите дату рождения</label><input type="date" id="modalBirth" value="${extra?.birth || ''}" required></div><div class="modal-field"><label>📅 Подтвердите нужный год</label><input type="number" id="modalYear" value="${extra?.year || ''}" required></div>`;
+        footnote = 'Расшифровка финансового прогноза на выбранный год.';
     }
+    
     document.getElementById('modalExtraFields').innerHTML = extraHtml;
     document.getElementById('modalFootnote').innerHTML = footnote;
     agreeDocsCheck.checked = false;
@@ -1715,7 +1602,6 @@ const paymentLinks = {
     "Полная расшифровка совместимости": "https://payform.ru/hlbJJ2m/",
     "Расшифровка денежного кода (прогноз на год)": "https://payform.ru/58bK7mo/",
     "Расшифровка личного прогноза (год+месяцы+дни)": "https://payform.ru/6gbIusu/"
-    
 };
 // ⬆⬆⬆ ВСТАВЬТЕ ВАШИ ССЫЛКИ ВЫШЕ ⬆⬆⬆
 
@@ -1737,7 +1623,6 @@ document.getElementById('modalPayBtn').onclick = () => {
         if(!male || !female){ alert("Подтвердите даты"); return; }
         localStorage.setItem('compatMale', male);
         localStorage.setItem('compatFemale', female);
-        // Сохраняем уникальный ключ пары для привязки оплаты
         const pairKey = male + "_" + female;
         localStorage.setItem('compatPaidKey', pairKey);
     } else if(currentPayment.type === 'forecast'){
@@ -1748,6 +1633,16 @@ document.getElementById('modalPayBtn').onclick = () => {
         localStorage.setItem('forecastYear', year);
         forecastPaid = true;
         forecastPaidYear = parseInt(year);
+    } else if(currentPayment.type === 'money'){
+        let birth = document.getElementById('modalBirth')?.value;
+        let year = document.getElementById('modalYear')?.value;
+        if (!birth || !year) { alert("Подтвердите дату и год"); return; }
+        localStorage.setItem('moneyBirth', birth);
+        localStorage.setItem('moneyYear', year);
+        localStorage.setItem('moneyPaid', 'true');
+        localStorage.setItem('moneyPaidYear', year);
+        moneyPaid = true;
+        if (typeof moneyPaidYear !== 'undefined') moneyPaidYear = parseInt(year);
     }
     
     modalDiv.style.display = 'none';
@@ -1777,6 +1672,10 @@ document.getElementById('modalPayBtn').onclick = () => {
             } else {
                 document.getElementById('calcForecastBtn').click();
             }
+        } else if(currentPayment.type === 'money'){
+            moneyPaid = true;
+            if (currentMoneyYear) renderMoneyResults();
+            else if (currentMoneyBirth) document.getElementById('calcMoneyCodeBtn').click();
         } else if(currentPayment.type === 'guide'){
             alert(`Спасибо за заказ! Ссылка на оплату: ${paymentLinks[currentPayment.name] || "не указана"}`);
         }
