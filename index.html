@@ -109,7 +109,14 @@
             .forecast-years-grid{grid-template-columns:1fr;}
             .years-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));}
             .months-table th,.months-table td{padding:8px 4px;font-size:0.75rem;}
-        }
+        }/* Денежный код */
+.money-code{font-size:2rem;font-weight:800;text-align:center;letter-spacing:6px;margin:20px 0;padding:15px;background:#F3EDE6;border-radius:20px;font-family:monospace;}
+.money-forecast-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:15px;}
+.money-year-card{background:white;border:1px solid #EFE9E2;border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;}
+.money-year-card.active{background:#2C2C2C;border-color:#2C2C2C;color:white;}
+.money-year-energy{font-size:1.8rem;font-weight:700;margin:6px 0;}
+.shadow-block{margin-top:12px;padding:12px;background:#FFF8E7;border-radius:16px;border-left:3px solid #F5A623;}
+.pdf-button{text-align:center;margin-top:20px;}
     </style>
 </head>
 <body>
@@ -120,6 +127,7 @@
         <button class="nav-btn" data-tab="tab2">🤰 Калькулятор беременности</button>
         <button class="nav-btn" data-tab="tab3">💞 Калькулятор совместимости</button>
         <button class="nav-btn" data-tab="tab4">🔮 Личный прогноз</button>
+        <button class="nav-btn" data-tab="tab7">💰 Твой денежный код</button>
         <button class="nav-btn" data-tab="tab5">🃏 Карта дня</button>
         <button class="nav-btn" data-tab="tab6">📚 Гайды</button>
         <button class="nav-btn" id="consultNavBtn">📅 Записаться на консультацию</button>
@@ -137,6 +145,46 @@
     <!-- КАЛЬКУЛЯТОР 4 - ЛИЧНЫЙ ПРОГНОЗ -->
     <div id="tab4" class="calculator-panel"><h2>🔮 Личный прогноз по годам и дням</h2><div class="input-group"><div class="input-field"><label>📅 Дата рождения</label><input type="date" id="birthForecast"></div><button class="calc-action" id="calcForecastBtn">Рассчитать</button></div><div id="forecastResults" style="display:none;"></div><div id="forecastPayWall" style="display:none; text-align:center;"><button class="pay-btn" id="forecastPayBtn">🔓 Расшифровка прогноза за 1490₽ <span class="old-price">3500₽</span></button></div></div>
 
+    <!-- НОВАЯ ВКЛАДКА 7 - ДЕНЕЖНЫЙ КОД -->
+<div id="tab7" class="calculator-panel">
+    <div class="two-columns">
+        <div class="main-col">
+            <h2>💰 Твой денежный код</h2>
+            <div class="input-group">
+                <div class="input-field">
+                    <label>📅 Дата рождения</label>
+                    <input type="date" id="birthMoneyCode">
+                </div>
+                <button class="calc-action" id="calcMoneyCodeBtn">Рассчитать</button>
+            </div>
+            <div id="moneyCodeResults" class="results-area">👉 Введите дату и нажмите «Рассчитать»</div>
+            <div id="moneyPayWall" style="display:none; text-align:center;">
+                <button class="pay-btn" id="moneyPayBtn">🔓 Полная расшифровка прогноза за 290₽ <span class="old-price">590₽</span></button>
+            </div>
+            <div class="disclaimer">⚠️ Данные материалы не являются финансовой консультацией. Автор не несёт ответственности за финансовые решения, принятые на основе этой информации.</div>
+        </div>
+        <div class="sidebar-col">
+            <div class="offer-card">
+                <img src="https://raw.githubusercontent.com/olgapereberina19-code/gid/main/Обложка%20Все%20о%20твоих%20финансах.png">
+                <h3>💰 Гайд «Все о твоих финансах»</h3>
+                <div class="price">990₽</div>
+                <div class="description">
+                    <strong>Что такое денежный код</strong><br>
+                    Денежный код — комбинация из 4 цифр по дате рождения. Показывает, через что приходят деньги и что их блокирует.
+                    <br><br>
+                    <strong>Как использовать:</strong><br>
+                    • Запишите на стикер<br>
+                    • Положите в кошелёк<br>
+                    • Используйте как пароль<br>
+                    • Повторяйте вслух по утрам
+                    <br><br>
+                    <strong>Правило:</strong> Не рассказывайте код другим.
+                </div>
+                <button class="shop-btn" data-product="Гайд «Все о твоих финансах»" data-price="990">Купить гайд</button>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- КАРТА ДНЯ -->
     <div id="tab5" class="calculator-panel"><h2>🃏 Карта дня</h2><div style="text-align:center;"><button class="calc-action" id="drawCardBtn">✨ Вытянуть карту дня ✨</button></div><div id="cardResult" style="margin-top:24px; text-align:center;"></div></div>
 
@@ -207,7 +255,14 @@
         } else if (tab === 'compat') {
             targetTab = 'tab3';
             serviceName = 'расшифровку совместимости';
-        }
+        } else if(currentPayment.type === 'money'){
+    let birth = document.getElementById('modalBirth')?.value;
+    let year = document.getElementById('modalYear')?.value;
+    if(!birth || !year){ alert("Подтвердите дату и год"); return; }
+    localStorage.setItem('moneyBirth', birth);
+    localStorage.setItem('moneyYear', year);
+    localStorage.setItem('moneyPaid', 'true');
+}
         
         // ОТКРЫВАЕМ ВКЛАДКУ
         openTab(targetTab);
@@ -1635,7 +1690,9 @@ const paymentLinks = {
     "Расшифровка нумерологического портрета": "https://payform.ru/q4bGXpI/",
     "Расшифровка прогноза беременности": "https://payform.ru/6kbJGlc/",
     "Полная расшифровка совместимости": "https://payform.ru/hlbJJ2m/",
+    "Расшифровка денежного кода (прогноз на год)": "https://payform.ru/ВАША_ССЫЛКА_НА_ОПЛАТУ",
     "Расшифровка личного прогноза (год+месяцы+дни)": "https://payform.ru/6gbIusu/"
+    
 };
 // ⬆⬆⬆ ВСТАВЬТЕ ВАШИ ССЫЛКИ ВЫШЕ ⬆⬆⬆
 
@@ -1816,7 +1873,300 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 });
 
 document.querySelector('.nav-btn').click();
+// ============================================================================
+// 34. ДЕНЕЖНЫЙ КОД - КАЛЬКУЛЯТОР
+// ============================================================================
 
+// Функции расчёта
+function reduceMoneyDigit(num) {
+    if (num === 0) return 0;
+    while (num > 9) {
+        num = Math.floor(num / 10) + (num % 10);
+    }
+    return num;
+}
+
+function calcMoneyCode(dateStr) {
+    if (!dateStr) return null;
+    let dt = new Date(dateStr);
+    if (isNaN(dt.getTime())) return null;
+    
+    let day = dt.getDate();
+    let month = dt.getMonth() + 1;
+    let year = dt.getFullYear();
+    
+    let num1 = reduceMoneyDigit(day);
+    let num2 = reduceMoneyDigit(month);
+    let num3 = reduceMoneyDigit(year);
+    let num4 = reduceMoneyDigit(num1 + num2 + num3);
+    
+    return {
+        code: parseInt(`${num1}${num2}${num3}${num4}`),
+        digits: [num1, num2, num3, num4]
+    };
+}
+
+function calcYearEnergy(code, year) {
+    let sum = 0;
+    for (let ch of code.toString()) sum += parseInt(ch);
+    for (let ch of year.toString()) sum += parseInt(ch);
+    return reduceMoneyDigit(sum);
+}
+
+function calcYearShadow(code, year) {
+    let product = code * year;
+    let sum = 0;
+    for (let ch of product.toString()) sum += parseInt(ch);
+    return reduceMoneyDigit(sum);
+}
+
+function generateMoneyYears(startYear) {
+    let years = [];
+    for (let i = 0; i < 10; i++) years.push(startYear + i);
+    return years;
+}
+
+// Краткие описания (бесплатно)
+const moneyShortDesc = {
+    1: "Прорыв или потеря",
+    2: "Новые источники или отсутствие дохода",
+    3: "Денежный поток или растраты",
+    4: "Стабильный доход или рутина",
+    5: "Лёгкие деньги или нестабильность",
+    6: "Финансовая устойчивость или долговая яма",
+    7: "Деньги из неожиданных мест или блокировка дохода",
+    8: "Крупные суммы или жадность",
+    9: "Пик дохода или финансовые потери"
+};
+
+// ========== СЮДА ВСТАВЬТЕ ВАШИ РАСШИФРОВКИ (ПЛАТНАЯ ВЕРСИЯ) ==========
+const moneyFullDesc = {
+    1: "🔓 ВСТАВЬТЕ ТЕКСТ ДЛЯ ЭНЕРГИИ 1",
+    2: "🔓 ВСТАВЬТЕ ТЕКСТ ДЛЯ ЭНЕРГИИ 2",
+    3: "🔓 ВСТАВЬТЕ ТЕКСТ ДЛЯ ЭНЕРГИИ 3",
+    4: "🔓 ВСТАВЬТЕ ТЕКСТ ДЛЯ ЭНЕРГИИ 4",
+    5: "🔓 ВСТАВЬТЕ ТЕКСТ ДЛЯ ЭНЕРГИИ 5",
+    6: "🔓 ВСТАВЬТЕ ТЕКСТ ДЛЯ ЭНЕРГИИ 6",
+    7: "🔓 ВСТАВЬТЕ ТЕКСТ ДЛЯ ЭНЕРГИИ 7",
+    8: "🔓 ВСТАВЬТЕ ТЕКСТ ДЛЯ ЭНЕРГИИ 8",
+    9: "🔓 ВСТАВЬТЕ ТЕКСТ ДЛЯ ЭНЕРГИИ 9"
+};
+
+const moneyShadowFullDesc = {
+    1: "🌑 ВСТАВЬТЕ ТЕКСТ ДЛЯ ТЕНИ 1",
+    2: "🌑 ВСТАВЬТЕ ТЕКСТ ДЛЯ ТЕНИ 2",
+    3: "🌑 ВСТАВЬТЕ ТЕКСТ ДЛЯ ТЕНИ 3",
+    4: "🌑 ВСТАВЬТЕ ТЕКСТ ДЛЯ ТЕНИ 4",
+    5: "🌑 ВСТАВЬТЕ ТЕКСТ ДЛЯ ТЕНИ 5",
+    6: "🌑 ВСТАВЬТЕ ТЕКСТ ДЛЯ ТЕНИ 6",
+    7: "🌑 ВСТАВЬТЕ ТЕКСТ ДЛЯ ТЕНИ 7",
+    8: "🌑 ВСТАВЬТЕ ТЕКСТ ДЛЯ ТЕНИ 8",
+    9: "🌑 ВСТАВЬТЕ ТЕКСТ ДЛЯ ТЕНИ 9"
+};
+
+// Переменные состояния
+let moneyPaid = false;
+let currentMoneyCode = null;
+let currentMoneyBirth = null;
+let currentMoneyYear = null;
+
+// Основная функция отрисовки
+function renderMoneyResults() {
+    if (!currentMoneyCode || !currentMoneyBirth) return;
+    
+    const formattedDate = new Date(currentMoneyBirth).toLocaleDateString('ru-RU');
+    const codeValue = currentMoneyCode.code;
+    const currentYear = new Date().getFullYear();
+    
+    if (!currentMoneyYear) currentMoneyYear = currentYear;
+    
+    const yearsList = generateMoneyYears(currentYear);
+    
+    // Карточки годов
+    let cardsHtml = '';
+    for (let yr of yearsList) {
+        const energy = calcYearEnergy(codeValue, yr);
+        cardsHtml += `
+            <div class="money-year-card ${yr === currentMoneyYear ? 'active' : ''}" data-year="${yr}">
+                <div class="year">${yr}</div>
+                <div class="money-year-energy">${energy}</div>
+                <div class="short-desc">${moneyShortDesc[energy] || ""}</div>
+            </div>
+        `;
+    }
+    
+    const selectedEnergy = calcYearEnergy(codeValue, currentMoneyYear);
+    const selectedShadow = calcYearShadow(codeValue, currentMoneyYear);
+    const selectedShortDesc = moneyShortDesc[selectedEnergy] || "";
+    
+    // Проверяем оплату через localStorage
+    const savedPaid = localStorage.getItem('moneyPaid');
+    const savedBirth = localStorage.getItem('moneyBirth');
+    if (savedPaid === 'true' && savedBirth === currentMoneyBirth) {
+        moneyPaid = true;
+    } else {
+        moneyPaid = false;
+    }
+    
+    let fullDescHtml = '';
+    let pdfButton = '';
+    
+    if (moneyPaid) {
+        const energyFull = moneyFullDesc[selectedEnergy] || "Расшифровка энергии года будет добавлена";
+        const shadowFull = moneyShadowFullDesc[selectedShadow] || "Расшифровка тени года будет добавлена";
+        
+        fullDescHtml = `
+            <div class="full-text" style="margin-top:16px;">
+                <strong>📊 Полная расшифровка финансового прогноза на ${currentMoneyYear} год</strong><br><br>
+                <div style="margin-bottom:16px;">
+                    <strong>🌟 Энергия года: ${selectedEnergy}</strong> — ${selectedShortDesc}<br><br>
+                    ${energyFull}
+                </div>
+                <div class="shadow-block">
+                    <strong>🌑 Тень года: ${selectedShadow}</strong><br><br>
+                    ${shadowFull}
+                </div>
+            </div>
+        `;
+        pdfButton = `<div class="pdf-button"><button id="moneyPdfBtn" class="pay-btn" style="background:#4CAF50;">📥 Скачать прогноз в PDF</button></div>`;
+    } else {
+        fullDescHtml = `
+            <div class="full-text" style="text-align:center; margin-top:16px;">
+                🔒 <strong>Полная расшифровка финансового прогноза на ${currentMoneyYear} год</strong><br><br>
+                Чтобы узнать энергию года, тень года и подробный прогноз, оплатите расшифровку за 290₽
+                <div style="margin-top: 16px;">
+                    <button class="pay-btn" id="moneyUnlockBtn">🔓 Получить расшифровку за 290₽</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    const resultsHtml = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div class="payment-badge">✨ Ваш личный денежный код ✨</div>
+            <div class="money-code">${codeValue}</div>
+            <p style="color: #7A6E62; font-size: 0.85rem;">Для даты: ${formattedDate}</p>
+            <p style="color: #B0A396; font-size: 0.75rem; margin-top: 8px;">🔓 Расшифровка цифр кода — в гайде «Все о твоих финансах»</p>
+        </div>
+        
+        <div class="result-block">
+            <strong>📆 Финансовая прогностика по годам</strong>
+            <p style="font-size: 0.75rem; color: #B0A396; margin-top: 4px;">Нажмите на любой год, чтобы посмотреть прогноз</p>
+            <div class="money-forecast-grid">
+                ${cardsHtml}
+            </div>
+            ${fullDescHtml}
+            ${pdfButton}
+        </div>
+    `;
+    
+    const resultsDiv = document.getElementById('moneyCodeResults');
+    if (resultsDiv) {
+        resultsDiv.innerHTML = resultsHtml;
+        resultsDiv.style.display = 'block';
+    }
+    
+    // Обработчики кликов по годам
+    document.querySelectorAll('.money-year-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const year = parseInt(card.dataset.year);
+            currentMoneyYear = year;
+            renderMoneyResults();
+        });
+    });
+    
+    // Кнопка оплаты
+    const unlockBtn = document.getElementById('moneyUnlockBtn');
+    if (unlockBtn) {
+        unlockBtn.onclick = () => {
+            showPaymentModal("Расшифровка денежного кода (прогноз на год)", 290, "money", { birth: currentMoneyBirth, year: currentMoneyYear });
+        };
+    }
+    
+    // Кнопка PDF
+    const pdfBtn = document.getElementById('moneyPdfBtn');
+    if (pdfBtn) {
+        pdfBtn.onclick = () => {
+            const energyFull = moneyFullDesc[selectedEnergy] || "Расшифровка энергии года будет добавлена";
+            const shadowFull = moneyShadowFullDesc[selectedShadow] || "Расшифровка тени года будет добавлена";
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Финансовый прогноз на ${currentMoneyYear} год</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Inter', sans-serif; background: white; padding: 40px; line-height: 1.5; }
+                        .container { max-width: 800px; margin: 0 auto; }
+                        h1 { font-size: 28px; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                        .money-code { font-size: 2rem; font-weight: 800; text-align: center; letter-spacing: 8px; background: #f5f5f5; padding: 20px; border-radius: 20px; margin: 20px 0; }
+                        .forecast-block { background: #f5f5f5; padding: 20px; border-radius: 15px; margin: 20px 0; }
+                        .energy-section { margin-bottom: 20px; }
+                        .shadow-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd; }
+                        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
+                        .disclaimer { font-size: 10px; color: #999; margin-top: 20px; text-align: center; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>💰 Финансовый прогноз на ${currentMoneyYear} год</h1>
+                        <p>Переберина Ольга — нумеролог-чакролог</p>
+                        <p>Дата рождения: ${new Date(currentMoneyBirth).toLocaleDateString('ru-RU')}</p>
+                        <div class="money-code">Ваш денежный код: ${codeValue}</div>
+                        <div class="forecast-block">
+                            <div class="energy-section">
+                                <strong>🌟 Энергия года: ${selectedEnergy}</strong><br><br>
+                                ${energyFull}
+                            </div>
+                            <div class="shadow-section">
+                                <strong>🌑 Тень года: ${selectedShadow}</strong><br><br>
+                                ${shadowFull}
+                            </div>
+                        </div>
+                        <div class="disclaimer">
+                            ⚠️ Данные материалы носят информационно-ознакомительный характер и не являются финансовой консультацией.
+                        </div>
+                        <div class="footer">
+                            <p>© Переберина Ольга | ai_numerolog@mail.ru</p>
+                        </div>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() { window.print(); setTimeout(function() { window.close(); }, 1000); }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        };
+    }
+}
+
+// Обработчик кнопки "Рассчитать"
+const calcMoneyBtn = document.getElementById('calcMoneyCodeBtn');
+if (calcMoneyBtn) {
+    calcMoneyBtn.onclick = function() {
+        let birth = document.getElementById('birthMoneyCode').value;
+        if (!birth) {
+            alert("📅 Пожалуйста, введите дату рождения");
+            return;
+        }
+        let result = calcMoneyCode(birth);
+        if (!result) {
+            alert("❌ Ошибка при расчёте. Проверьте дату рождения");
+            return;
+        }
+        currentMoneyCode = result;
+        currentMoneyBirth = birth;
+        currentMoneyYear = new Date().getFullYear();
+        moneyPaid = false;
+        renderMoneyResults();
+    };
+}
 console.log("Сайт полностью загружен и работает!");
 </script>
 </body>
