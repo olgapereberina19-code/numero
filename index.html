@@ -246,6 +246,224 @@
 </div>
 
 <script>
+    // ============================================================================
+// АВТОМАТИЧЕСКОЕ ОТКРЫТИЕ ПОСЛЕ ОПЛАТЫ
+// ============================================================================
+(function autoOpenAfterPayment() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paid = urlParams.get('paid');
+    const tab = urlParams.get('tab');
+    
+    function openTab(tabId) {
+        document.querySelectorAll('.calculator-panel').forEach(p => p.classList.remove('active-panel'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const targetPanel = document.getElementById(tabId);
+        if (targetPanel) targetPanel.classList.add('active-panel');
+        const targetBtn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+        if (targetBtn) targetBtn.classList.add('active');
+    }
+    
+    if (paid === '1') {
+        // УСТАНАВЛИВАЕМ ФЛАГИ ДЛЯ ОПЛАЧЕННОГО ТОВАРА
+        if (tab === 'forecast') {
+            localStorage.setItem('forecastPaid', 'true');
+            const savedYear = localStorage.getItem('forecastYear');
+            if (savedYear) localStorage.setItem('forecastPaidYear', savedYear);
+        } else if (tab === 'preg') {
+            localStorage.setItem('pregPaid', 'true');
+            const savedYear = localStorage.getItem('pregYear');
+            if (savedYear) localStorage.setItem('pregPaidYear', savedYear);
+        } else if (tab === 'compat') {
+            localStorage.setItem('compatPaid', 'true');
+        } else if (tab === 'money') {
+            localStorage.setItem('moneyPaid', 'true');
+            const savedYear = localStorage.getItem('moneyYear');
+            if (savedYear) localStorage.setItem('moneyPaidYear', savedYear);
+        } else {
+            localStorage.setItem('mainPaid', 'true');
+        }
+        
+        let targetTab = 'tab1';
+        let serviceName = 'нумерологический портрет';
+        
+        if (tab === 'forecast') {
+            targetTab = 'tab4';
+            serviceName = 'личный прогноз';
+        } else if (tab === 'preg') {
+            targetTab = 'tab2';
+            serviceName = 'прогноз беременности';
+        } else if (tab === 'compat') {
+            targetTab = 'tab3';
+            serviceName = 'расшифровку совместимости';
+        } else if (tab === 'money') {
+            targetTab = 'tab7';
+            serviceName = 'финансовый прогноз';
+        }
+        
+        openTab(targetTab);
+        
+        setTimeout(() => {
+            alert(`✅ Оплата прошла успешно!\n\nВаша ${serviceName} теперь открыта.`);
+        }, 500);
+        
+        // ДЛЯ ЛИЧНОГО ПРОГНОЗА
+        if (tab === 'forecast') {
+            const savedBirth = localStorage.getItem('forecastBirth');
+            const savedYear = localStorage.getItem('forecastYear');
+            
+            const observer = new MutationObserver(function(mutations) {
+                const tab4 = document.getElementById('tab4');
+                if (tab4 && tab4.classList.contains('active-panel')) {
+                    observer.disconnect();
+                    if (savedBirth) document.getElementById('birthForecast').value = savedBirth;
+                    if (savedYear) { forecastPaid = true; forecastPaidYear = parseInt(savedYear); }
+                    const calcBtn = document.getElementById('calcForecastBtn');
+                    if (calcBtn) {
+                        calcBtn.click();
+                        setTimeout(() => {
+                            if (forecastPaidYear) renderForecast(forecastPaidYear);
+                        }, 500);
+                    }
+                }
+            });
+            observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+            
+            setTimeout(() => {
+                observer.disconnect();
+                if (savedBirth) document.getElementById('birthForecast').value = savedBirth;
+                if (savedYear) { forecastPaid = true; forecastPaidYear = parseInt(savedYear); }
+                const calcBtn = document.getElementById('calcForecastBtn');
+                if (calcBtn) calcBtn.click();
+            }, 2000);
+        } 
+        // ДЛЯ БЕРЕМЕННОСТИ
+        else if (tab === 'preg') {
+            const savedBirth = localStorage.getItem('pregBirth');
+            const savedYear = localStorage.getItem('pregYear');
+            
+            const observer = new MutationObserver(function(mutations) {
+                const tab2 = document.getElementById('tab2');
+                if (tab2 && tab2.classList.contains('active-panel')) {
+                    observer.disconnect();
+                    if (savedBirth) document.getElementById('birthPreg').value = savedBirth;
+                    if (savedYear) { pregPaid = true; pregPaidYear = parseInt(savedYear); }
+                    const calcBtn = document.getElementById('calcPregBtn');
+                    if (calcBtn) {
+                        calcBtn.click();
+                        setTimeout(() => {
+                            if (pregPaidYear) renderPregnancy(pregPaidYear);
+                        }, 500);
+                    }
+                }
+            });
+            observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+            
+            setTimeout(() => {
+                observer.disconnect();
+                if (savedBirth) document.getElementById('birthPreg').value = savedBirth;
+                if (savedYear) { pregPaid = true; pregPaidYear = parseInt(savedYear); }
+                const calcBtn = document.getElementById('calcPregBtn');
+                if (calcBtn) calcBtn.click();
+            }, 2000);
+        } 
+        // ДЛЯ СОВМЕСТИМОСТИ
+        else if (tab === 'compat') {
+            const savedMale = localStorage.getItem('compatMale');
+            const savedFemale = localStorage.getItem('compatFemale');
+            
+            const observer = new MutationObserver(function(mutations) {
+                const tab3 = document.getElementById('tab3');
+                if (tab3 && tab3.classList.contains('active-panel')) {
+                    observer.disconnect();
+                    if (savedMale) document.getElementById('birthMale').value = savedMale;
+                    if (savedFemale) document.getElementById('birthFemale').value = savedFemale;
+                    const calcBtn = document.getElementById('calcCompatBtn');
+                    if (calcBtn) calcBtn.click();
+                }
+            });
+            observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+            
+            setTimeout(() => {
+                observer.disconnect();
+                if (savedMale) document.getElementById('birthMale').value = savedMale;
+                if (savedFemale) document.getElementById('birthFemale').value = savedFemale;
+                const calcBtn = document.getElementById('calcCompatBtn');
+                if (calcBtn) calcBtn.click();
+            }, 2000);
+        } 
+        // ДЛЯ ДЕНЕЖНОГО КОДА
+        else if (tab === 'money') {
+            const savedBirth = localStorage.getItem('moneyBirth');
+            const savedYear = localStorage.getItem('moneyYear');
+            
+            const observer = new MutationObserver(function(mutations) {
+                const tab7 = document.getElementById('tab7');
+                if (tab7 && tab7.classList.contains('active-panel')) {
+                    observer.disconnect();
+                    if (savedBirth) document.getElementById('birthMoneyCode').value = savedBirth;
+                    if (savedYear) {
+                        moneyPaid = true;
+                        if (typeof moneyPaidYear !== 'undefined') moneyPaidYear = parseInt(savedYear);
+                    }
+                    const calcBtn = document.getElementById('calcMoneyCodeBtn');
+                    if (calcBtn) {
+                        calcBtn.click();
+                        setTimeout(() => {
+                            if (savedYear && typeof currentMoneyYear !== 'undefined') {
+                                currentMoneyYear = parseInt(savedYear);
+                                if (typeof renderMoneyResults === 'function') renderMoneyResults();
+                            }
+                        }, 500);
+                    }
+                }
+            });
+            observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+            
+            setTimeout(() => {
+                observer.disconnect();
+                if (savedBirth) document.getElementById('birthMoneyCode').value = savedBirth;
+                if (savedYear) {
+                    moneyPaid = true;
+                    if (typeof moneyPaidYear !== 'undefined') moneyPaidYear = parseInt(savedYear);
+                }
+                const calcBtn = document.getElementById('calcMoneyCodeBtn');
+                if (calcBtn) calcBtn.click();
+            }, 2000);
+        } 
+        // ДЛЯ НУМЕРОЛОГИЧЕСКОГО ПОРТРЕТА
+        else {
+            const savedBirth = localStorage.getItem('mainBirth');
+            
+            const observer = new MutationObserver(function(mutations) {
+                const tab1 = document.getElementById('tab1');
+                if (tab1 && tab1.classList.contains('active-panel')) {
+                    observer.disconnect();
+                    if (savedBirth) {
+                        document.getElementById('birthMain').value = savedBirth;
+                        const calcBtn = document.getElementById('calcMainBtn');
+                        if (calcBtn) calcBtn.click();
+                    }
+                }
+            });
+            observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+            
+            setTimeout(() => {
+                observer.disconnect();
+                if (savedBirth) {
+                    document.getElementById('birthMain').value = savedBirth;
+                    const calcBtn = document.getElementById('calcMainBtn');
+                    if (calcBtn) calcBtn.click();
+                }
+            }, 2000);
+        }
+        
+        setTimeout(() => {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 2000);
+    } else {
+        openTab('tab1');
+    }
+})();
 // ============================================================================
 // ==================== ВСЕ РАСШИФРОВКИ (ЗАМЕНИТЕ НА ВАШИ ТЕКСТЫ) ====================
 // ============================================================================
